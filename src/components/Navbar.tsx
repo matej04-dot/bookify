@@ -1,11 +1,16 @@
 import Search from "./Search";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
+  const navigate = useNavigate();
   return (
     <>
       <div className="p-3 bg-gray-900">
         <div className="flex justify-between items-center mb-1">
-          <p className="p-2 text-4xl font-light text-gray-200 tracking-wider">
+          <p
+            onClick={() => navigate("/")}
+            className="p-2 text-4xl font-light text-gray-200 tracking-wider"
+          >
             bookify
           </p>
           <a

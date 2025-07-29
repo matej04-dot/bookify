@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import BookCategory from "../components/BookCategory";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <div className="container mx-auto px-2">
         <BookCategory />
       </div>
+      <Footer />
     </>
   );
 }

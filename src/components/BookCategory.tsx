@@ -7,6 +7,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useNavigate } from "react-router-dom";
 
 type BookData = {
   works: {
@@ -54,6 +55,8 @@ function BookList() {
     "https://openlibrary.org/subjects/science.json?limit=10&offset=0"
   );
 
+  const navigate = useNavigate();
+
   const renderBookCarousel = (
     data: BookData | null,
     loading: boolean,
@@ -98,6 +101,12 @@ function BookList() {
           <CarouselContent className="-ml-4">
             {booksToDisplay.map((book, index) => (
               <CarouselItem
+                onClick={() => {
+                  if (book.key) {
+                    const bookKey = book.key.replace("/works/", "");
+                    navigate(`${bookKey}`);
+                  }
+                }}
                 key={book.key || index}
                 className="pl-4 basis-[40%] sm:basis-[28.57%] lg:basis-[22.22%] xl:basis-[15.38%]"
               >

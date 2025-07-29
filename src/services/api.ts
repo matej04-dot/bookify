@@ -1,4 +1,3 @@
-// src/hooks/useFetch.ts
 import { useEffect, useState } from "react";
 
 type UseFetchOptions = RequestInit;
@@ -45,7 +44,7 @@ console.log(res)
     fetchData();
 
     return () => {
-      isCancelled = true; // avoid setting state on unmounted component
+      isCancelled = true; 
     };
   }, [url]);
 

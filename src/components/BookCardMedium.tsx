@@ -23,7 +23,7 @@ const BookCardaMedium = ({ book }: BookProps) => {
         />
       </div>
       <div className="w-full flex-grow p-2 sm:p-1 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
-        <p className="font-semibold text-gray-800 leading-snug text-base sm:text-sm line-clamp-2">
+        <p className="font-semibold text-gray-800 leading-snug text-base sm:text-sm md:text-lg line-clamp-2">
           {book.title}
         </p>
         <p className="text-sm text-gray-600 italic mb-1 line-clamp-1">

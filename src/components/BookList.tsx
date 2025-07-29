@@ -15,8 +15,6 @@ function BookList() {
     "https://openlibrary.org/subjects/fantasy.json?limit=5&offset=15"
   );
 
-  console.log(data);
-
   if (loading)
     return (
       <p className="text-center text-gray-900 font-medium animate-pulse">
