@@ -18,7 +18,7 @@ type BookDetailsProps = {
 type AuthorDetailsProps = {
   name?: string;
   photos?: number[];
-  biography?: string | { value: string };
+  bio?: string | { value: string };
   birth_date?: string;
   death_date?: string;
 };
@@ -55,6 +55,9 @@ function BookDetails() {
     fetchAuthors();
   }, [bookData]);
 
+  console.log(bookData);
+  console.log(authors[0]);
+
   const coverId = bookData?.covers?.[0] ?? null;
   const bookCover = `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
 
@@ -71,24 +74,22 @@ function BookDetails() {
 
   return (
     <>
-      <div className="flex w-full items-center justify-center mt-10 p-5">
-        <div className="w-1/4 flex items-center justify-center border-2 border-gray-300 rounded-lg overflow-hidden relative p-3 bg-gray-200">
+      <div className="md:flex w-full items-center justify-center md:mt-10 p-5">
+        <div className="sm:w-1/2 md:w-1/4 flex items-center justify-center border-2 border-gray-300 rounded-lg overflow-hidden relative p-3">
           {loading && (
-            <div className="h-64 bg-gray-100 flex items-center justify-center">
+            <div className="h-64 flex items-center justify-center">
               <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
           <img
             src={bookCover}
-            className={`w-full h-full object-cover ${
-              loading ? "hidden" : "block"
-            }`}
+            className={`h-full object-cover ${loading ? "hidden" : "block"}`}
             onLoad={() => setLoading(false)}
             onError={() => setLoading(false)}
           ></img>
         </div>
-        <div className="w-3/4 pl-6">
-          <div className="mb-2">
+        <div className="md:w-3/4 md:pl-6 mt-3">
+          <div className="mb-3">
             <p className="text-3xl">{bookData.title}</p>
             <p className="text-lg text-gray-600 italic mb-1 line-clamp-1">
               by{" "}
@@ -98,33 +99,58 @@ function BookDetails() {
             <Example />
           </div>
           {<hr></hr>}
-          {typeof bookData.description === "string"
-            ? bookData.description
-            : bookData.description?.value}
+          <p className="mt-2 border border-gray-200 rounded-lg p-2">
+            {typeof bookData.description === "string"
+              ? bookData.description
+              : bookData.description?.value}
+          </p>
         </div>
       </div>
+      {<hr></hr>}
       {authors[0] && (
-        <div className="flex">
-          <p>About the author</p>
-          <div>
+        <div className="md:flex items-center justify-center m-5">
+          <p className="text-lg text-gray-600 italic mb-1 ml-2">
+            About the author
+          </p>
+          <div className="md:flex border border-gray-100 rounded-lg p-3 bg-gray-200">
             {authors[0].photos?.[0] && (
               <img
                 src={`https://covers.openlibrary.org/b/id/${authors[0].photos[0]}-M.jpg`}
+                className="rounded-lg shadow-lg"
               ></img>
             )}
-            <p>{authors[0].name}</p>
+            <p className="mt-10">{authors[0].name}</p>
             <p>Birth date: {authors[0].birth_date}</p>
             {authors[0]?.death_date && (
               <p>Death date: {authors[0].death_date}</p>
             )}
-            <p>
-              {typeof authors[0].biography === "string"
-                ? authors[0].biography
-                : authors[0].biography?.value}
+
+            <p className="bg-gray-50 sm:mt-5 md:mt-0 p-3 rounded-lg">
+              {typeof authors[0].bio === "string"
+                ? authors[0].bio
+                : authors[0].bio?.value}
             </p>
           </div>
         </div>
       )}
+      {<hr></hr>}
+      <div className="m-5 mt-8">
+        <p className="text-lg text-gray-600 italic mb-1 ml-2">Reviews</p>
+        <p className="italic text-gray-500 border-2 p-3 rounded-lg">
+          Pero Peric: Contrary to popular belief, Lorem Ipsum is not simply
+          random text. It has roots in a piece of classical Latin literature
+          from 45 BC, making it over 2000 years old. Richard McClintock, a Latin
+          professor at Hampden-Sydney College in Virginia, looked up one of the
+          more obscure Latin words, consectetur, from a Lorem Ipsum passage, and
+          going through the cites of the word in classical literature,
+          discovered the undoubtable source. Lorem Ipsum comes from sections
+          1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes
+          of Good and Evil) by Cicero, written in 45 BC. This book is a treatise
+          on the theory of ethics, very popular during the Renaissance. The
+          first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from
+          a line in section 1.10.32.
+        </p>
+      </div>
     </>
   );
 }
