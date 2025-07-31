@@ -1,14 +1,6 @@
 import { useFetch } from "../services/api";
 import Book from "./BookCardaLarge";
-
-type BookData = {
-  works: {
-    key: string;
-    title: string;
-    authors: { name: string }[];
-    cover_edition_key?: string;
-  }[];
-};
+import type { BookData } from "@/types/Types";
 
 function BookList() {
   const { data, loading, error } = useFetch<BookData>(

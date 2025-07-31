@@ -1,15 +1,9 @@
-type AuthorDetailsProps = {
-  name?: string;
-  photos?: number[];
-  bio?: string | { value: string };
-  birth_date?: string;
-  death_date?: string;
-};
+import type { AuthorDetailsProps } from "@/types/Types";
+import { baseUrl } from "@/utils/Constants";
 
 async function authorsData(
     authorsKeys: string[]
   ): Promise<AuthorDetailsProps[]> {
-    const baseUrl = "https://openlibrary.org/";
 
     const responses = await Promise.all(
       authorsKeys.map((item) => fetch(`${baseUrl}${item}.json`))

@@ -1,13 +1,12 @@
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import DefaultLayout from "@/components/layout/DefaultLayout";
 import BookDetails from "@/components/BookDetails";
 
 function bookDetails() {
   return (
     <>
-      <Navbar />
-      <BookDetails />
-      <Footer />
+      <DefaultLayout>
+        <BookDetails />
+      </DefaultLayout>
     </>
   );
 }

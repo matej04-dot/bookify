@@ -1,4 +1,6 @@
 import Example from "./Rating";
+import { useState } from "react";
+import { imagesBaseUrl } from "../utils/Constants";
 
 type BookProps = {
   book: {
@@ -9,16 +11,26 @@ type BookProps = {
 };
 
 const BookCardaMedium = ({ book }: BookProps) => {
+  const [loading, setLoading] = useState(true);
   const coverUrl = book.cover_edition_key
-    ? `https://covers.openlibrary.org/b/olid/${book.cover_edition_key}-M.jpg`
+    ? `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`
     : "/no-cover.jpg";
 
   return (
     <div className="flex flex-col items-center justify-between shadow-md border border-gray-200 rounded-lg hover:shadow-xl hover:border-blue-100 transition-shadow duration-300 w-full sm:w-40 sm:max-w-xs bg-white mx-auto h-full">
       <div className="bg-gray-100 rounded-t-lg flex-shrink-0 flex items-center justify-center w-full">
+        {loading && (
+          <div className="h-51 flex items-center justify-center">
+            <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
         <img
           src={coverUrl}
-          className="rounded-t-lg h-36 sm:h-48 w-full object-cover m-2"
+          className={`rounded-t-lg h-36 sm:h-48 w-full object-cover m-2 ${
+            loading ? "hidden" : "block"
+          }`}
+          onLoad={() => setLoading(false)}
+          onError={() => setLoading(false)}
           alt={`Cover for ${book.title}`}
         />
       </div>

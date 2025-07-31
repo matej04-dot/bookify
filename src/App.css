@@ -119,3 +119,7 @@
   }
 }
 
+.title-case {
+  text-transform: capitalize;
+}
+
