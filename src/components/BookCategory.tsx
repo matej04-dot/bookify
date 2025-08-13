@@ -26,8 +26,8 @@ function BookCategory() {
   const fetchedBooks = results.map((result) => result.data);
   console.log(fetchedBooks);
 
-  return fetchedBooks.map((item) => (
-    <BookCarouselRender data={item === undefined ? null : item} />
+  return fetchedBooks.map((item, index) => (
+    <BookCarouselRender key={index} data={item === undefined ? null : item} />
   ));
 }
 

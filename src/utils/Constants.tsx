@@ -8,3 +8,5 @@ export const BOOK_URLS = [
   `${baseUrl}/subjects/thriller.json?limit=10&offset=0`,
   `${baseUrl}/subjects/science.json?limit=10&offset=0`,
 ];
+
+export const PAGE_SIZE = 10;
