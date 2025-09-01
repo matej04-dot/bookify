@@ -15,3 +15,14 @@ export type BookData = {
     cover_edition_key?: string;
   }[];
 };
+
+export interface Review {
+  id: string;
+  userId: string;
+  username: string;
+  bookId: string;
+  rating: number;
+  comment: string;
+  createdAt: any;
+  updatedAt: any;
+}

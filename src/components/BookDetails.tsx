@@ -1,10 +1,15 @@
-import { data, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useFetch } from "../services/api";
 import { useEffect, useState } from "react";
 import authorsData from "../services/fetchAuthors";
-import Example from "./Rating";
 import type { AuthorDetailsProps } from "@/types/Types";
 import { baseUrl, imagesBaseUrl } from "@/utils/Constants";
+import ReviewComponent from "./ReviewComponent";
+import StarRating from "./Rating";
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase-config";
+import ReviewsList from "./ReviewsList";
 
 type BookDetailsProps = {
   covers?: number[];
@@ -22,12 +27,46 @@ function BookDetails() {
   const [loading, setLoading] = useState(true);
   const [authors, setAuthors] = useState<AuthorDetailsProps[]>([]);
   const [loadingAuthors, setLoadingAuthors] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const {
     data: bookData,
     loading: loadingBook,
     error: errorBook,
   } = useFetch<BookDetailsProps>(`${baseUrl}/works/${bookKey}.json`);
+
+  const [average, setAverage] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchAvg = async () => {
+      if (!bookKey) {
+        if (mounted) setAverage(null);
+        return;
+      }
+      try {
+        const ref = doc(db, "bookAvgRating", bookKey);
+        const snap = await getDoc(ref);
+        if (!mounted) return;
+        if (!snap.exists()) {
+          setAverage(null);
+        } else {
+          const data: any = snap.data();
+          const total = Number(data.total ?? 0);
+          const count = Number(data.count ?? 0);
+          const avg = count > 0 ? Math.round((total / count) * 10) / 10 : 0;
+          setAverage(avg);
+        }
+      } catch (err) {
+        console.error("Failed to fetch average rating:", err);
+        if (mounted) setAverage(null);
+      }
+    };
+    fetchAvg();
+    return () => {
+      mounted = false;
+    };
+  }, [bookKey]);
 
   useEffect(() => {
     async function fetchAuthors() {
@@ -88,10 +127,10 @@ function BookDetails() {
               {authors.map((author) => author.name).join(", ") ||
                 "Unknown Author"}
             </p>
-            <Example />
+            <StarRating value={average ?? 0} readOnly />
           </div>
           {<hr></hr>}
-          <p className="mt-2 border border-gray-200 rounded-lg p-3 text-gray-900">
+          <p className="mt-2 border border-gray-200 rounded-lg p-3 text-gray-700">
             {typeof bookData.description === "string"
               ? bookData.description
               : bookData.description?.value}
@@ -120,7 +159,7 @@ function BookDetails() {
                 )}
               </div>
             </div>
-            <p className="bg-gray-50 text-gray-900 sm:mt-5 md:mt-0 md:ml-3 p-3 md:w-3/4 rounded-lg break-words">
+            <p className="bg-gray-50 text-gray-700 sm:mt-5 md:mt-0 md:ml-3 p-3 md:w-3/4 rounded-lg break-words">
               {typeof authors[0].bio === "string"
                 ? authors[0].bio
                 : authors[0].bio?.value}
@@ -129,38 +168,25 @@ function BookDetails() {
         </div>
       )}
       {<hr></hr>}
-      <div className="m-5 mt-8 lg:w-4/5 lg:mx-auto">
-        <p className="text-lg text-gray-600 italic mb-1 ml-2">Reviews</p>
-        <p className="italic text-gray-500 border-2 p-3 rounded-lg">
-          Pero Peric: Contrary to popular belief, Lorem Ipsum is not simply
-          random text. It has roots in a piece of classical Latin literature
-          from 45 BC, making it over 2000 years old. Richard McClintock, a Latin
-          professor at Hampden-Sydney College in Virginia, looked up one of the
-          more obscure Latin words, consectetur, from a Lorem Ipsum passage, and
-          going through the cites of the word in classical literature,
-          discovered the undoubtable source. Lorem Ipsum comes from sections
-          1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes
-          of Good and Evil) by Cicero, written in 45 BC. This book is a treatise
-          on the theory of ethics, very popular during the Renaissance. The
-          first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from
-          a line in section 1.10.32.
-          {<br></br>}
-          {<br></br>}
-          Marko Maric: Hampden-Sydney College in Virginia, looked up one of the
-          more obscure Latin words, consectetur, from a Lorem Ipsum passage, and
-          going through the cites of the word in classical literature,
-          discovered the undoubtable source. Lorem Ipsum comes from sections
-          1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes
-          of Good and Evil) by Cicero
-          {<br></br>}
-          {<br></br>}
-          Marko Maric: Hampden-Sydney College in Virginia, looked up one of the
-          more obscure Latin words, consectetur, from a Lorem Ipsum passage, and
-          going through the cites of the word in classical literature,
-          discovered the undoubtable source. Lorem Ipsum comes from sections
-          1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes
-          of Good and Evil) by Cicero
-        </p>
+      <div className="m-5 lg:w-4/5 lg:mx-auto">
+        <button
+          className="rounded-lg mb-3 p-2.5 text-gray-800 font-semibold bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg border border-yellow-400"
+          onClick={() => {
+            const auth = getAuth();
+            const isAuthenticated = !!auth.currentUser;
+            if (isAuthenticated) {
+              setShowReviewModal(true);
+            } else {
+              alert("You must be logged in or registered to leave a review.");
+            }
+          }}
+        >
+          Make Review
+        </button>
+        {showReviewModal && (
+          <ReviewComponent onClose={() => setShowReviewModal(false)} />
+        )}
+        <ReviewsList bookId={bookKey} />
       </div>
     </>
   );

@@ -16,7 +16,11 @@ function BookCategory() {
   const isError = results.some((result) => result.isError);
 
   if (isLoading) {
-    return <span>Loading books...</span>;
+    return (
+      <span className="text-gray-500 flex justify-center">
+        Loading books...
+      </span>
+    );
   }
 
   if (isError) {

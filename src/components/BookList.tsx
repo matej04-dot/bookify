@@ -1,13 +1,26 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { useProjectsInfinite } from "../services/infiniteBookFetch";
 import BookCardLarge from "./BookCardLarge";
 import { useNavigate } from "react-router-dom";
 import { baseUrl } from "@/utils/Constants";
 import { useSearchParams } from "react-router-dom";
+import OrderBy from "./OrderBy";
 
 const ProjectsListInfinite: React.FC = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+
+  const [order, setOrder] = useState<string>("relevance");
+
+  const projectsUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("q", query ?? "");
+    params.set("mode", "everything");
+    if (order && order !== "relevance") params.set("sort", order);
+    const u = `${baseUrl}/search.json?${params.toString()}`;
+    console.log("useProjectsInfinite -> projectsUrl:", u);
+    return u;
+  }, [query, order]);
 
   const {
     data,
@@ -17,9 +30,7 @@ const ProjectsListInfinite: React.FC = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useProjectsInfinite(
-    `${baseUrl}/search.json?q=${encodeURIComponent(query)}&mode=everything`
-  );
+  } = useProjectsInfinite(projectsUrl);
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -57,6 +68,7 @@ const ProjectsListInfinite: React.FC = () => {
 
   return (
     <>
+      <OrderBy value={order} onChange={setOrder} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 p-3">
         {data?.pages.map((page, i) => (
           <React.Fragment key={i}>
@@ -67,7 +79,7 @@ const ProjectsListInfinite: React.FC = () => {
                 onClick={() => {
                   if (book.key) {
                     const bookKey = book.key.replace("/works/", "");
-                    navigate(`/${bookKey}`);
+                    navigate(`/bookDetails/${encodeURIComponent(bookKey)}`);
                   }
                 }}
               />

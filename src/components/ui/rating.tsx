@@ -62,9 +62,26 @@ export const RatingButton = ({
   } = useRating();
 
   const index = providedIndex ?? 0;
-  const isActive = index < (hoverValue ?? focusedStar ?? value ?? 0);
-  let tabIndex = -1;
 
+  // Prikaz pola zvjezdice u readonly modu
+  let fillPercentage = 0;
+  if (readOnly) {
+    const diff = value - index;
+    // Zaokruži na najbliže: 0, 0.5 ili 1
+    let rounded = 0;
+    if (diff <= 0.25) rounded = 0;
+    else if (diff <= 0.75) rounded = 0.5;
+    else rounded = 1;
+
+    if (rounded === 1) fillPercentage = 100;
+    else if (rounded === 0.5) fillPercentage = 45;
+    else fillPercentage = 0;
+  } else {
+    fillPercentage =
+      index < (hoverValue ?? focusedStar ?? value ?? 0) ? 100 : 0;
+  }
+
+  let tabIndex = -1;
   if (!readOnly) {
     tabIndex = value === index + 1 ? 0 : -1;
   }
@@ -93,7 +110,7 @@ export const RatingButton = ({
   return (
     <button
       className={cn(
-        "rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "p-0.5",
         readOnly && "cursor-default",
         className
@@ -106,16 +123,28 @@ export const RatingButton = ({
       onMouseEnter={handleMouseEnter}
       tabIndex={tabIndex}
       type="button"
+      style={{ position: "relative" }}
     >
-      {cloneElement(icon, {
-        size,
-        className: cn(
-          "transition-colors duration-200",
-          isActive && "fill-current",
-          !readOnly && "cursor-pointer"
-        ),
-        "aria-hidden": "true",
-      })}
+      {/* Siva zvjezdica u pozadini */}
+      <StarIcon
+        size={size}
+        className="transition-colors duration-200 text-gray-300 absolute inset-0"
+        stroke="currentColor"
+        fill="none"
+        aria-hidden="true"
+      />
+      {/* Ispunjeni dio zvjezdice */}
+      <div
+        className="absolute inset-0 overflow-hidden text-yellow-500 pointer-events-none"
+        style={{ width: `${fillPercentage}%` }}
+      >
+        <StarIcon
+          size={size}
+          className="text-yellow-500"
+          stroke="currentColor"
+          fill="currentColor"
+        />
+        </div>
     </button>
   );
 };

@@ -40,7 +40,7 @@ function BookCarouselRender({ data }: { data: BookData | null }) {
               onClick={() => {
                 if (book.key) {
                   const bookKey = book.key.replace("/works/", "");
-                  navigate(`${bookKey}`);
+                  navigate(`bookDetails/${bookKey}`);
                 }
               }}
               key={book.key || index}
