@@ -184,7 +184,7 @@ function BookDetails() {
           Make Review
         </button>
         {showReviewModal && (
-          <ReviewComponent onClose={() => setShowReviewModal(false)} />
+          <ReviewComponent onClose={() => setShowReviewModal(false)} bookName={bookData.title} />
         )}
         <ReviewsList bookId={bookKey} />
       </div>

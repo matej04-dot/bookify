@@ -6,9 +6,13 @@ import { auth } from "../firebase-config";
 
 type ReviewComponentProps = {
   onClose?: () => void;
+  bookName?: string | null;
 };
 
-export default function ReviewComponent({ onClose }: ReviewComponentProps) {
+export default function ReviewComponent({
+  onClose,
+  bookName,
+}: ReviewComponentProps) {
   const { bookId, bookKey } = useParams<{
     bookId?: string;
     bookKey?: string;
@@ -48,9 +52,10 @@ export default function ReviewComponent({ onClose }: ReviewComponentProps) {
         rating,
         comment: comment.trim() || null,
         username,
+        bookName: bookName || null,
       };
       console.log("Submitting review payload:", payload);
-      await addReview(payload);
+      await addReview(payload as any);
       setRating(0);
       setComment("");
       onClose?.();

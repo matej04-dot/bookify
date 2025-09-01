@@ -8,16 +8,7 @@ import {
   serverTimestamp,
   runTransaction,
 } from "firebase/firestore";
-
-export interface Review {
-  userId: string;
-  bookId: string;
-  rating: number;
-  comment?: string | null;
-  username?: string | null;
-  createdAt?: any;
-  updatedAt?: any;
-}
+import type { Review } from "../types/Types";
 
 export async function addReview(review: Review) {
   if (!review || !review.userId) throw new Error("Invalid review payload: missing userId");
@@ -36,6 +27,7 @@ export async function addReview(review: Review) {
         userId: review.userId,
         bookId: review.bookId,
         rating: review.rating,
+        bookName: review.bookName ?? null,
         comment: review.comment ?? null,
         username: review.username ?? null,
         createdAt: serverTimestamp(),
@@ -45,6 +37,7 @@ export async function addReview(review: Review) {
       if (!aggSnap.exists()) {
         tx.set(aggRef, {
           bookId: review.bookId,
+          bookName: review.bookName ?? null,
           total: review.rating,
           count: 1,
           createdAt: serverTimestamp(),

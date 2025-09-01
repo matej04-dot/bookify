@@ -24,7 +24,11 @@ export default function ReviewItem({ review }: { review: Review }) {
             alt={review.username || "User"}
             className="w-10 h-10 rounded-full mr-4"
           />
-          <h4 className="font-semibold mb-1.5">{review.username}</h4>
+          <h4 className="font-semibold mb-1.5">
+            {window.location.pathname === "/account"
+              ? review.bookName
+              : review.username}
+          </h4>
         </div>
         <StarRating value={review.rating} readOnly />
       </div>

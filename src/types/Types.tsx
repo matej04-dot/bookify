@@ -21,6 +21,7 @@ export interface Review {
   userId: string;
   username: string;
   bookId: string;
+  bookName: string | null;
   rating: number;
   comment: string;
   createdAt: any;

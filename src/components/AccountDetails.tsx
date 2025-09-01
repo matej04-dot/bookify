@@ -139,99 +139,173 @@ export default function AccountDetails() {
 
   if (loading)
     return (
-      <div className="text-gray-500 flex justify-center p-4">Loading...</div>
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <div className="text-gray-500 animate-pulse">Loading...</div>
+      </div>
     );
   if (error)
-    return <div className="text-red-500 flex justify-center p-4">{error}</div>;
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <div className="text-red-500 p-4 rounded bg-red-50">{error}</div>
+      </div>
+    );
   if (!authUser)
     return (
-      <div className="text-gray-500 flex justify-center p-4">Not signed in</div>
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <div className="text-gray-500 p-4">Not signed in</div>
+      </div>
     );
 
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
     authUser.displayName || "User"
-  )}`;
+  )}&background=eff6ff&color=0f172a&size=256`;
 
   return (
-    <div className="p-4">
-      <div className="flex flex-col md:flex-row border border-gray-300 justify-between bg-gray-100 rounded-lg shadow-md max-w-lg mx-auto p-3 mb-3 gap-4 md:gap-0">
-        <div className="flex flex-col sm:flex-row items-center">
-          <img
-            src={avatarUrl}
-            alt="User Avatar"
-            className="w-22 h-22 sm:w-26 sm:h-26 rounded-full"
-          />
-          <div className="mt-3 sm:mt-0 sm:ml-6 text-center sm:text-left">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 break-words">
-              {authUser.displayName ?? profile?.displayName ?? "—"}
-            </h2>
-            {profile?.createdAt && (
-              <p className="text-gray-500 text-sm mt-1">
-                <strong className="font-medium text-gray-700">Joined:</strong>{" "}
-                {profile.createdAt?.toDate
-                  ? profile.createdAt.toDate().toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })
-                  : String(profile.createdAt)}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-col justify-center">
-          {profile?.role === "admin" && (
-            <button
-              type="button"
-              className="text-md mb-3 h-10 w-full md:w-22 rounded-lg bg-blue-300 border border-blue-400 hover:bg-blue-400 text-gray-800 font-semibold transition"
-              onClick={() => navigate("/adminPanel")}
-            >
-              Admin
-            </button>
-          )}
-          <button
-            type="button"
-            className="text-md h-10 w-full md:w-22 rounded-lg bg-red-400 border border-red-500 hover:bg-red-500 text-gray-800 font-semibold transition"
-            onClick={handleClick}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-      <div>
-        <div className="max-w-md mx-auto space-y-2">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center bg-white rounded-lg shadow-sm px-4 py-3 border border-gray-200">
-            <span className="font-semibold text-gray-700 w-full sm:w-28 mb-1 sm:mb-0">
-              Email:
-            </span>
-            <span className="text-gray-800 break-all">
-              {authUser.email ?? profile?.email ?? "—"}
-            </span>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center bg-white rounded-lg shadow-sm px-4 py-3 border border-gray-200">
-            <span className="font-semibold text-gray-700 w-full sm:w-28 mb-1 sm:mb-0">
-              Last Login:
-            </span>
-            <span className="text-gray-800">
-              {profile?.lastLogin?.toDate
-                ? profile.lastLogin.toDate().toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
-                : "—"}
-            </span>
-          </div>
-          <div>
-            {userReviews.length === 0 ? (
-              <div className="text-center text-gray-500 m-2">
-                No reviews found
+    <div className="min-h-screen bg-slate-50 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+          <div className="flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
+            <aside className="w-full lg:w-72 flex flex-col items-center lg:items-start gap-4">
+              <img
+                src={avatarUrl}
+                alt={authUser.displayName ?? "User avatar"}
+                className="w-28 h-28 rounded-full object-cover border-2 border-white shadow-sm"
+              />
+              <div className="text-center lg:text-left">
+                <div className="text-2xl font-semibold text-slate-900">
+                  {authUser.displayName ?? profile?.displayName ?? "—"}
+                </div>
               </div>
-            ) : (
-              userReviews.map((review) => (
-                <ReviewItem key={review.id} review={review} />
-              ))
-            )}
+
+              <div className="w-full mt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-50 p-3 rounded-md border border-slate-100 text-center">
+                    <div className="text-xs text-slate-400">Reviews</div>
+                    <div className="text-sm font-medium text-slate-800">
+                      {userReviews.length}
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border border-slate-100 text-center">
+                    <div className="text-xs text-slate-400">Role</div>
+                    <div className="text-sm font-medium text-slate-800">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-medium ${
+                          profile?.role === "admin"
+                            ? "bg-amber-100 text-amber-800 border border-amber-200"
+                            : "bg-slate-100 text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {profile?.role ?? "user"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full mt-4 flex gap-3">
+                {profile?.role === "admin" && (
+                  <button
+                    onClick={() => navigate("/adminPanel")}
+                    className="flex-1 inline-flex justify-center items-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white font-semibold transition"
+                  >
+                    Admin
+                  </button>
+                )}
+                <button
+                  onClick={handleClick}
+                  className="flex-1 inline-flex justify-center items-center gap-2 px-3 py-2 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-semibold transition"
+                >
+                  Logout
+                </button>
+              </div>
+            </aside>
+
+            <main className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Account details
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Manage your profile and see your recent activity.
+                  </p>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="text-sm text-slate-500">
+                    Email
+                    <div className="text-sm font-medium text-slate-900 break-words">
+                      {authUser.email ?? profile?.email ?? "—"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                  <div className="text-xs text-slate-400">Display name</div>
+                  <div className="text-sm font-medium text-slate-900 mt-1">
+                    {authUser.displayName ?? profile?.displayName ?? "—"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                  <div className="text-xs text-slate-400">Created At</div>
+                  <div className="text-sm font-medium text-slate-900 mt-1">
+                    {profile?.createdAt &&
+                      profile.createdAt.toDate().toLocaleDateString("en-US", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                  </div>
+                </div>
+              </div>
+
+              <section className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Your reviews
+                  </h3>
+                  <div className="text-sm text-slate-500">
+                    Showing {userReviews.length}
+                  </div>
+                </div>
+
+                {userReviews.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-slate-100 bg-white p-6 text-center text-slate-500">
+                    You haven't posted any reviews yet.
+                  </div>
+                ) : (
+                  <div
+                    role="region"
+                    aria-label="User reviews"
+                    className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden"
+                  >
+                    <div
+                      className={
+                        "p-4 md:p-5 overflow-y-auto " +
+                        "max-h-[60vh] md:max-h-[50vh] lg:max-h-[50vh] " +
+                        "space-y-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-50"
+                      }
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {userReviews.map((review) => (
+                          <div
+                            key={review.id}
+                            className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition"
+                          >
+                            <ReviewItem review={review} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+            </main>
           </div>
         </div>
       </div>

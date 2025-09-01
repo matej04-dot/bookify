@@ -5,6 +5,7 @@ import BooksList from "../pages/booksList";
 import Login from "../pages/loginPage";
 import AccountDetails from "@/pages/accountDetails";
 import AdminPanelPage from "@/pages/adminPanel";
+import AdminReviewList from "@/pages/adminReviewsList";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
   {
     path: "/adminPanel",
     element: <AdminPanelPage />,
+  },
+  {
+    path: "/admin/users/:userId",
+    element: <AdminReviewList />,
   },
 ]);
 
