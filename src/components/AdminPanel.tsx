@@ -176,7 +176,6 @@ function AdminPanel() {
               ))}
             </div>
 
-            {/* Table view for large screens (lg and up) - improved spacing and readability */}
             <div className="hidden lg:block bg-white rounded-lg shadow overflow-x-auto border border-gray-100">
               <table className="min-w-full table-auto">
                 <thead className="bg-gray-50">

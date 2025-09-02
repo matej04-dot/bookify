@@ -208,7 +208,7 @@ export default function AccountDetails() {
                     onClick={() => navigate("/adminPanel")}
                     className="flex-1 inline-flex justify-center items-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white font-semibold transition"
                   >
-                    Admin
+                    Adm. Panel
                   </button>
                 )}
                 <button
