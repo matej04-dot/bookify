@@ -124,8 +124,10 @@ function BookDetails() {
             <p className="text-3xl">{bookData.title}</p>
             <p className="text-lg text-gray-600 italic mb-1 line-clamp-1">
               by{" "}
-              {authors.map((author) => author.name).join(", ") ||
-                "Unknown Author"}
+              {loadingAuthors
+                ? "Loading authors..."
+                : authors.map((author) => author.name).join(", ") ||
+                  "Unknown Author"}
             </p>
             <StarRating value={average ?? 0} readOnly />
           </div>
@@ -184,7 +186,10 @@ function BookDetails() {
           Make Review
         </button>
         {showReviewModal && (
-          <ReviewComponent onClose={() => setShowReviewModal(false)} bookName={bookData.title} />
+          <ReviewComponent
+            onClose={() => setShowReviewModal(false)}
+            bookName={bookData.title}
+          />
         )}
         <ReviewsList bookId={bookKey} />
       </div>

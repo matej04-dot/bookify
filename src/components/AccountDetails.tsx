@@ -250,10 +250,10 @@ export default function AccountDetails() {
                 </div>
 
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                  <div className="text-xs text-slate-400">Created At</div>
+                  <div className="text-xs text-slate-400">Last Login</div>
                   <div className="text-sm font-medium text-slate-900 mt-1">
-                    {profile?.createdAt &&
-                      profile.createdAt.toDate().toLocaleDateString("en-US", {
+                    {profile?.lastLogin &&
+                      profile.lastLogin.toDate().toLocaleDateString("en-US", {
                         day: "2-digit",
                         month: "long",
                         year: "numeric",

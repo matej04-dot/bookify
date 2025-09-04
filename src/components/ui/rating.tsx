@@ -48,7 +48,6 @@ export const RatingButton = ({
   index: providedIndex,
   size = 20,
   className,
-  icon = <StarIcon />,
 }: RatingButtonProps) => {
   const {
     value,
@@ -144,7 +143,7 @@ export const RatingButton = ({
           stroke="currentColor"
           fill="currentColor"
         />
-        </div>
+      </div>
     </button>
   );
 };

@@ -1,6 +1,8 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { act } from "react";
 import BookCardLarge from "./BookCardLarge";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("@/utils/Constants", () => ({
   imagesBaseUrl: "https://covers.example",
@@ -63,7 +65,9 @@ describe("BookCardLarge", () => {
     const spinner = container.querySelector(".animate-spin");
     expect(spinner).toBeInTheDocument();
 
-    fireEvent.load(img);
+    await act(async () => {
+      fireEvent.load(img);
+    });
     await waitFor(() => {
       expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
     });
@@ -100,12 +104,15 @@ describe("BookCardLarge", () => {
 
     await screen.findByText("Loading rating...");
 
-    resolveSnap!({
-      exists: () => false,
-      data: () => ({}),
+    await act(async () => {
+      resolveSnap!({
+        exists: () => false,
+        data: () => ({}),
+      });
     });
-
-    await screen.findByText("No ratings yet");
+    await waitFor(() => {
+      expect(screen.getByText("No ratings yet")).toBeInTheDocument();
+    });
   });
 
   it("calls onClick when container is clicked", async () => {
@@ -120,7 +127,7 @@ describe("BookCardLarge", () => {
     );
 
     const root = container.firstChild as Element;
-    fireEvent.click(root);
+    await userEvent.click(root); // automatski koristi act
     expect(onClick).toHaveBeenCalled();
   });
 });
