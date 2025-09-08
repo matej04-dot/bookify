@@ -26,6 +26,8 @@ function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -76,7 +78,6 @@ function AdminPanel() {
 
   const viewDetails = (userId: string) => {
     if (!userId) return;
-    const navigate = useNavigate();
     navigate(`/admin/users/${encodeURIComponent(userId)}`);
   };
 
