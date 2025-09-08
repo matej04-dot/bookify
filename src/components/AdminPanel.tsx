@@ -10,6 +10,7 @@ import {
   type QueryDocumentSnapshot,
   type DocumentData,
 } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 type UserDoc = {
   id: string;
@@ -75,7 +76,8 @@ function AdminPanel() {
 
   const viewDetails = (userId: string) => {
     if (!userId) return;
-    window.location.href = `/admin/users/${encodeURIComponent(userId)}`;
+    const navigate = useNavigate();
+    navigate(`/admin/users/${encodeURIComponent(userId)}`);
   };
 
   return (
