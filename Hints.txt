@@ -1,6 +1,0 @@
-Dodati sorting i filtriranje (provjeriti na backendu koji url imaju)
-Dodavanje baze firestore i spremanje korisnickih recenzija
-Prikazivanje korisnickih recenzija i prosjecne ocjene na BookCard i BookDetails
-Pohrana preferirane teme korisnika u localStorage (kreirati button)
-Admin panel (uredjivanje korisnickih podataka i brisanje korisnika)
-Unit testovi (procitati dokumentaciju i isprobati)
