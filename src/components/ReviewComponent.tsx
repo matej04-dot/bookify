@@ -4,7 +4,7 @@ import { useState } from "react";
 import StarRating from "./Rating";
 import { addReview } from "../services/reviews";
 import { auth } from "../firebase-config";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 type ReviewComponentProps = {
   onClose?: () => void;
@@ -15,11 +15,9 @@ export default function ReviewComponent({
   onClose,
   bookName,
 }: ReviewComponentProps) {
-  const router = useRouter();
-  const { bookId, bookKey } = router.query as {
-    bookId?: string;
-    bookKey?: string;
-  };
+  const searchParams = useSearchParams();
+  const bookId = searchParams.get("bookId");
+  const bookKey = searchParams.get("bookKey");
   const targetBookId = bookId ?? bookKey;
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>("");

@@ -14,8 +14,11 @@ import {
 import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
 
-function AdminReviewList() {
-  const { userId } = useRouter().query as { userId?: string };
+interface AdminReviewListProps {
+  userId?: string;
+}
+
+function AdminReviewList({ userId }: AdminReviewListProps) {
   const router = useRouter();
   const [reviews, setReviews] = useState<(Review & { id: string })[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -88,7 +91,7 @@ function AdminReviewList() {
                 <button
                   type="button"
                   className="px-3 py-2 rounded-md bg-white border-2 border-blue-300 text-gray-700 hover:bg-gray-50 transition text-sm"
-                  onClick={() => router.push("/adminPanel")}
+                  onClick={() => router.push("/admin")}
                 >
                   Back to Admin Panel
                 </button>
@@ -146,9 +149,11 @@ function AdminReviewList() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() =>
-                            (window.location.href = `/bookDetails/${encodeURIComponent(
-                              review.bookId ?? ""
-                            )}`)
+                            router.push(
+                              `/bookDetails/${encodeURIComponent(
+                                review.bookId ?? ""
+                              )}`
+                            )
                           }
                           className="text-xs text-gray-700 font-semibold px-3 py-2 rounded-md bg-blue-400 border border-blue-300 hover:bg-blue-500 transition"
                         >

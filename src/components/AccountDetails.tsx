@@ -36,7 +36,7 @@ export default function AccountDetails() {
       console.error("Logout failed:", err);
       setError("Logout failed");
     } finally {
-      router.push("/", { replace: true });
+      router.push("/");
       setAuthUser(null);
       setProfile(null);
       setLoading(false);
