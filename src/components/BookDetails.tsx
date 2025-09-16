@@ -1,11 +1,8 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useFetch } from "../services/api";
 import { useEffect, useState } from "react";
-import authorsData from "../services/fetchAuthors";
 import type { AuthorDetailsProps } from "@/types/Types";
-import { baseUrl, imagesBaseUrl } from "@/utils/Constants";
+import { imagesBaseUrl } from "@/utils/Constants";
 import ReviewComponent from "./ReviewComponent";
 import StarRating from "./Rating";
 import { getAuth } from "firebase/auth";
@@ -14,29 +11,19 @@ import { db } from "../firebase-config";
 import ReviewsList from "./ReviewsList";
 
 type BookDetailsProps = {
-  covers?: number[];
-  title?: string;
-  description?: string | { value: string };
-  authors?: {
-    author: {
-      key: string;
-    };
-  }[];
+  bookKey: string;
+  bookData: {
+    covers?: number[];
+    title?: string;
+    description?: string | { value: string };
+    authors?: { author: { key: string } }[];
+  } | null;
+  authors: AuthorDetailsProps[];
 };
 
-function BookDetails() {
-  const { bookKey } = useParams<{ bookKey: string }>();
+function BookDetails({ bookKey, bookData, authors }: BookDetailsProps) {
   const [loading, setLoading] = useState(true);
-  const [authors, setAuthors] = useState<AuthorDetailsProps[]>([]);
-  const [loadingAuthors, setLoadingAuthors] = useState(true);
   const [showReviewModal, setShowReviewModal] = useState(false);
-
-  const {
-    data: bookData,
-    loading: loadingBook,
-    error: errorBook,
-  } = useFetch<BookDetailsProps>(`${baseUrl}/works/${bookKey}.json`);
-
   const [average, setAverage] = useState<number | null>(null);
 
   useEffect(() => {
@@ -70,40 +57,12 @@ function BookDetails() {
     };
   }, [bookKey]);
 
-  useEffect(() => {
-    async function fetchAuthors() {
-      if (!bookData?.authors) return;
+  const coverId = bookData?.covers?.[0];
+  const bookCover = coverId
+    ? `${imagesBaseUrl}/b/id/${coverId}-M.jpg`
+    : undefined;
 
-      const authorKeys = bookData.authors.map((a) => a.author.key);
-      try {
-        const authorData = await authorsData(authorKeys);
-        setAuthors(authorData);
-      } catch (err) {
-        console.error("Error fetching authors:", err);
-      } finally {
-        setLoadingAuthors(false);
-      }
-    }
-
-    fetchAuthors();
-  }, [bookData]);
-
-  console.log(bookData);
-  console.log(authors[0]);
-
-  const coverId = bookData?.covers?.[0] ?? null;
-  const bookCover = `${imagesBaseUrl}/b/id/${coverId}-M.jpg`;
-
-  if (loadingBook)
-    return (
-      <div className="h-64 flex items-center justify-center">
-        <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  if (errorBook) return <div>Error loading book details</div>;
   if (!bookData) return <div>No book data found</div>;
-
-  console.log(authors[0]);
 
   return (
     <>
@@ -114,26 +73,28 @@ function BookDetails() {
               <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
-          <img
-            src={bookCover}
-            className={`h-full object-cover ${loading ? "hidden" : "block"}`}
-            onLoad={() => setLoading(false)}
-            onError={() => setLoading(false)}
-          ></img>
+          {bookCover && (
+            <img
+              src={bookCover}
+              className={`h-full object-cover ${loading ? "hidden" : "block"}`}
+              onLoad={() => setLoading(false)}
+              onError={() => setLoading(false)}
+              alt={bookData.title}
+            />
+          )}
         </div>
         <div className="md:w-3/4 md:pl-6 mt-3">
           <div className="mb-3">
             <p className="text-3xl">{bookData.title}</p>
             <p className="text-lg text-gray-600 italic mb-1 line-clamp-1">
               by{" "}
-              {loadingAuthors
-                ? "Loading authors..."
-                : authors.map((author) => author.name).join(", ") ||
-                  "Unknown Author"}
+              {authors.length > 0
+                ? authors.map((author) => author.name).join(", ")
+                : "Unknown Author"}
             </p>
             <StarRating value={average ?? 0} readOnly />
           </div>
-          {<hr></hr>}
+          <hr />
           <p className="mt-2 border border-gray-200 rounded-lg p-3 text-gray-700">
             {typeof bookData.description === "string"
               ? bookData.description
@@ -141,7 +102,7 @@ function BookDetails() {
           </p>
         </div>
       </div>
-      {<hr></hr>}
+      <hr />
       {authors[0] && (
         <div className="items-center justify-center m-5 lg:w-4/5 lg:mx-auto">
           <p className="text-lg text-gray-600 italic mb-1 ml-2">
@@ -153,7 +114,8 @@ function BookDetails() {
                 <img
                   src={`${imagesBaseUrl}/b/id/${authors[0].photos[0]}-M.jpg`}
                   className="rounded-lg shadow-lg w-auto"
-                ></img>
+                  alt={authors[0].name}
+                />
               )}
               <div className="m-2 text-sm italic">
                 <p>{authors[0].name}</p>
@@ -171,7 +133,7 @@ function BookDetails() {
           </div>
         </div>
       )}
-      {<hr></hr>}
+      <hr />
       <div className="m-5 lg:w-4/5 lg:mx-auto">
         <button
           className="rounded-lg mb-3 p-2.5 text-gray-800 font-semibold bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg border border-yellow-400"
