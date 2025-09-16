@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { auth } from "../firebase-config";
 import {
@@ -7,8 +9,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { saveUser } from "../services/users";
+import { useSearchParams } from "next/navigation";
 
 const Login: React.FC = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -18,9 +21,9 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as any)?.from || "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from") || "/";
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -41,7 +44,7 @@ const Login: React.FC = () => {
         }
       }
 
-      navigate(from, { replace: true });
+      router.push(from, { replace: true });
     } catch (err: any) {
       console.error(
         "Auth error:",
@@ -78,7 +81,7 @@ const Login: React.FC = () => {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-      navigate(from, { replace: true });
+      router.push(from, { replace: true });
     } catch (err: any) {
       console.error(
         "Auth error:",

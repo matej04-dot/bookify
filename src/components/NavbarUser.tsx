@@ -1,13 +1,15 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { auth } from "../firebase-config";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 const NavbarUser: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -24,7 +26,7 @@ const NavbarUser: React.FC = () => {
       console.error("Logout failed:", err);
     } finally {
       setShowMenu(false);
-      navigate("/", { replace: true });
+      router.push("/", { replace: true });
     }
   };
 
@@ -78,7 +80,7 @@ const NavbarUser: React.FC = () => {
               hover:text-gray-900 transition-colors duration-150"
               onClick={() => {
                 setShowMenu(false);
-                navigate("/account");
+                router.push("/account");
               }}
             >
               <svg

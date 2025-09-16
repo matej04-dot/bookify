@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import Providers from "./providers";
 import "./globals.css";
-import { Open_Sans } from "next/font/google";
-
-const openSans = Open_Sans({
-  subsets: ["latin"],
-  display: "swap",
-});
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "bookify",
-  description: "bookify is a...",
+  title: "Bookify - Discover Amazing Books",
+  description: "Find and review your favorite books on Bookify",
 };
 
 export default function RootLayout({
@@ -21,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div id="root" className={openSans.className}>
-          <Providers>{children}</Providers>
-        </div>
+        <Providers>
+          <Navbar />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

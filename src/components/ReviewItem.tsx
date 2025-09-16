@@ -1,3 +1,5 @@
+"use client";
+
 import type { Review } from "../types/Types";
 import StarRating from "./Rating";
 

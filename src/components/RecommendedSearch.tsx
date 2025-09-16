@@ -1,6 +1,8 @@
+"use client";
+
 import type { FC } from "react";
 import { FaSearch } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 interface RecommendedSearchProps {
   recommendations: string[];
@@ -13,14 +15,14 @@ const RecommendedSearch: FC<RecommendedSearchProps> = ({
   onSelect,
   visible,
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   if (!visible || recommendations.length === 0) return null;
 
   const handleSelect = (rec: string) => {
     onSelect(rec);
     const formatted = rec.trim().toLocaleLowerCase().replace(/\s+/g, "+");
-    navigate(`/search?q=${formatted}&mode=everything`);
+    router.push(`/search?q=${formatted}&mode=everything`);
   };
 
   return (

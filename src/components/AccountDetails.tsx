@@ -1,7 +1,9 @@
+"use client";
+
 import { useEffect, useState, useRef } from "react";
 import { auth, db } from "../firebase-config";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import {
   doc,
   collection,
@@ -14,7 +16,7 @@ import type { QueryDocumentSnapshot } from "firebase/firestore";
 import ReviewItem from "./ReviewItem";
 
 export default function AccountDetails() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<DocumentData | null>(null);
   const [userReviews, setUserReviews] = useState<any[]>([]);
@@ -34,7 +36,7 @@ export default function AccountDetails() {
       console.error("Logout failed:", err);
       setError("Logout failed");
     } finally {
-      navigate("/", { replace: true });
+      router.push("/", { replace: true });
       setAuthUser(null);
       setProfile(null);
       setLoading(false);
@@ -205,7 +207,7 @@ export default function AccountDetails() {
               <div className="w-full mt-4 flex gap-3">
                 {profile?.role === "admin" && (
                   <button
-                    onClick={() => navigate("/adminPanel")}
+                    onClick={() => router.push("/adminPanel")}
                     className="flex-1 inline-flex justify-center items-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white font-semibold transition"
                   >
                     Adm. Panel

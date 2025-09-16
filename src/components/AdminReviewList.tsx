@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { db } from "../firebase-config";
 import {
   collection,
@@ -13,8 +15,8 @@ import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
 
 function AdminReviewList() {
-  const { userId } = useParams<{ userId: string }>();
-  const navigate = useNavigate();
+  const { userId } = useRouter().query as { userId?: string };
+  const router = useRouter();
   const [reviews, setReviews] = useState<(Review & { id: string })[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +88,7 @@ function AdminReviewList() {
                 <button
                   type="button"
                   className="px-3 py-2 rounded-md bg-white border-2 border-blue-300 text-gray-700 hover:bg-gray-50 transition text-sm"
-                  onClick={() => navigate("/adminPanel")}
+                  onClick={() => router.push("/adminPanel")}
                 >
                   Back to Admin Panel
                 </button>

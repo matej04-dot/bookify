@@ -1,3 +1,5 @@
+"use client";
+
 import { imagesBaseUrl } from "@/utils/Constants";
 import { useEffect, useState } from "react";
 import StarRating from "./Rating";

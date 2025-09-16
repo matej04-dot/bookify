@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { db } from "../firebase-config";
 import {
@@ -10,7 +12,7 @@ import {
   type QueryDocumentSnapshot,
   type DocumentData,
 } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 type UserDoc = {
   id: string;
@@ -26,7 +28,7 @@ function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
@@ -78,7 +80,7 @@ function AdminPanel() {
 
   const viewDetails = (userId: string) => {
     if (!userId) return;
-    navigate(`/admin/users/${encodeURIComponent(userId)}`);
+    router.push(`/admin/users/${encodeURIComponent(userId)}`);
   };
 
   return (

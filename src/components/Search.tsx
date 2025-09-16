@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useState, useCallback, useRef, useEffect } from "react";
 import RecommendedSearch from "./RecommendedSearch";
 import { baseUrl } from "@/utils/Constants";
@@ -20,7 +22,7 @@ const fetchBookTitles = async (query: string): Promise<string[]> => {
 };
 
 export default function Search() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [value, setValue] = useState("");
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [recommendVisible, setRecommendVisible] = useState(false);
@@ -47,8 +49,8 @@ export default function Search() {
     const formatted = value.trim().replace(/\s+/g, "+");
     const searchKey = `/search?q=${formatted}&mode=everything`;
     setRecommendVisible(false);
-    navigate(`${searchKey}`);
-  }, [navigate, value]);
+    router.push(`${searchKey}`);
+  }, [router, value]);
 
   const handleSelectRecommendation = (rec: string) => {
     setValue(rec);

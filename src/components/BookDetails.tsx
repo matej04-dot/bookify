@@ -1,4 +1,6 @@
-import { useParams } from "react-router-dom";
+"use client";
+
+import { useParams } from "next/navigation";
 import { useFetch } from "../services/api";
 import { useEffect, useState } from "react";
 import authorsData from "../services/fetchAuthors";

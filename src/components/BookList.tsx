@@ -1,13 +1,15 @@
+"use client";
+
 import React, { useRef, useEffect, useState, useMemo } from "react";
 import { useProjectsInfinite } from "../services/infiniteBookFetch";
 import BookCardLarge from "./BookCardLarge";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { baseUrl } from "@/utils/Constants";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "next/navigation";
 import OrderBy from "./OrderBy";
 
 const ProjectsListInfinite: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
 
   const [order, setOrder] = useState<string>("relevance");
@@ -34,7 +36,7 @@ const ProjectsListInfinite: React.FC = () => {
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -79,7 +81,7 @@ const ProjectsListInfinite: React.FC = () => {
                 onClick={() => {
                   if (book.key) {
                     const bookKey = book.key.replace("/works/", "");
-                    navigate(`/bookDetails/${encodeURIComponent(bookKey)}`);
+                    router.push(`/bookDetails/${encodeURIComponent(bookKey)}`);
                   }
                 }}
               />
