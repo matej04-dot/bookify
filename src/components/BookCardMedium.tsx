@@ -15,16 +15,18 @@ type BookProps = {
   };
 };
 
-const BookCardaMedium = ({ book }: BookProps) => {
+const BookCardMedium = ({ book }: BookProps) => {
   const [loading, setLoading] = useState(true);
   const [avgLoading, setAvgLoading] = useState(false);
   const [average, setAverage] = useState<number | null>(null);
-  const coverUrl = book.cover_edition_key
-    ? `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`
-    : "/no-cover.jpg";
+  const [reviewCount, setReviewCount] = useState<number | null>(null);
+  const coverUrl =
+    book.cover_edition_key &&
+    `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`;
 
   useEffect(() => {
     let mounted = true;
+
     const fetchAvgRating = async () => {
       if (!book.key) {
         if (mounted) setAverage(null);
@@ -44,6 +46,7 @@ const BookCardaMedium = ({ book }: BookProps) => {
           const count = Number(data.count ?? 0);
           const avg = count > 0 ? Math.round((total / count) * 10) / 10 : 0;
           setAverage(avg);
+          setReviewCount(count);
         }
       } catch (err) {
         console.error("Failed to fetch bookAvgRating:", err);
@@ -60,11 +63,11 @@ const BookCardaMedium = ({ book }: BookProps) => {
   }, [book.key]);
 
   return (
-    <div className="flex flex-col items-center justify-between shadow-md border border-gray-200 rounded-lg hover:shadow-xl hover:border-blue-100 transition-shadow duration-300 w-full sm:w-40 sm:max-w-xs bg-white mx-auto h-full">
-      <div className="bg-gray-100 rounded-t-lg flex-shrink-0 flex items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-between shadow-lg border border-gray-300 rounded-lg hover:shadow-xl transition-shadow duration-300 w-full sm:w-40 sm:max-w-xs bg-white mx-auto h-full">
+      <div className="bg-gray-200 rounded-t-lg flex-shrink-0 flex items-center justify-center w-full">
         {loading && (
           <div className="h-51 flex items-center justify-center">
-            <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
         <img
@@ -77,7 +80,7 @@ const BookCardaMedium = ({ book }: BookProps) => {
           alt={`Cover for ${book.title}`}
         />
       </div>
-      <div className="w-full flex-grow p-2 sm:p-1 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
+      <div className="w-full flex-grow p-3 sm:p-2 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
         <p className="font-semibold text-gray-800 leading-snug text-base sm:text-sm md:text-lg line-clamp-2">
           {book.title}
         </p>
@@ -98,11 +101,15 @@ const BookCardaMedium = ({ book }: BookProps) => {
         <StarRating value={average ?? 0} readOnly />
 
         <p className="text-xs text-gray-500 line-clamp-2 mt-2">
-          "Review: Battle of the Bookstores" is a charming ...
+          {reviewCount !== null
+            ? `Based on ${reviewCount} user review${
+                reviewCount !== 1 ? "s" : ""
+              }`
+            : "No reviews yet"}
         </p>
       </div>
     </div>
   );
 };
 
-export default BookCardaMedium;
+export default BookCardMedium;

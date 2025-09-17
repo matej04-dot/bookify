@@ -11,14 +11,25 @@ const fetchBookTitles = async (query: string): Promise<string[]> => {
   const url = `${baseUrl}/search.json?q=${encodeURIComponent(
     query
   )}&mode=everything&limit=5`;
-  const res = await fetch(url);
 
-  if (!res.ok) {
-    throw new Error(`HTTP error! Status: ${res.status}`);
+  try {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(
+        `HTTP error! Status: ${res.status}, Message: ${
+          errorData.message || "No message"
+        }`
+      );
+    }
+
+    const data = await res.json();
+    return data.docs.map((book: { title: string }) => book.title);
+  } catch (error) {
+    console.error("Error fetching book titles:", error);
+    throw error;
   }
-
-  const data = await res.json();
-  return data.docs.map((book: { title: string }) => book.title);
 };
 
 export default function Search() {

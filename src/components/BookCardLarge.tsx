@@ -16,16 +16,18 @@ type BookProps = {
   onClick?: () => void;
 };
 
-const BookCardaLarge = ({ book, onClick }: BookProps) => {
+const BookCardLarge = ({ book, onClick }: BookProps) => {
   const [loading, setLoading] = useState(true);
   const [avgLoading, setAvgLoading] = useState(false);
   const [average, setAverage] = useState<number | null>(null);
+  const [reviewCount, setReviewCount] = useState<number | null>(null);
   const coverUrl = book.cover_edition_key
     ? `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`
     : "/no-cover.jpg";
 
   useEffect(() => {
     let mounted = true;
+
     const fetchAvgRating = async () => {
       if (!book.key) {
         if (mounted) setAverage(null);
@@ -45,6 +47,7 @@ const BookCardaLarge = ({ book, onClick }: BookProps) => {
           const count = Number(data.count ?? 0);
           const avg = count > 0 ? Math.round((total / count) * 10) / 10 : 0;
           setAverage(avg);
+          setReviewCount(count);
         }
       } catch (err) {
         console.error("Failed to fetch bookAvgRating:", err);
@@ -63,7 +66,7 @@ const BookCardaLarge = ({ book, onClick }: BookProps) => {
   return (
     <div
       onClick={onClick}
-      className="flex rounded-lg shadow-md border border-gray-200 hover:shadow-xl hover:border-blue-100 transition-shadow duration-300 bg-white"
+      className="flex rounded-lg shadow-lg border border-gray-200 hover:shadow-xl hover:border-blue-100 transition-shadow duration-300 bg-white"
     >
       <div className="bg-gray-100 rounded-l-lg flex-shrink-0 flex items-center justify-center w-40 sm:w-48 p-3">
         {loading && (
@@ -81,7 +84,7 @@ const BookCardaLarge = ({ book, onClick }: BookProps) => {
           alt={`Cover for ${book.title}`}
         />
       </div>
-      <div className="w-full flex-grow p-2 sm:p-1 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
+      <div className="w-full flex-grow p-3 sm:p-2 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
         <p className="font-semibold text-gray-800 leading-snug text-base sm:text-sm md:text-lg line-clamp-2">
           {book.title}
         </p>
@@ -100,11 +103,15 @@ const BookCardaLarge = ({ book, onClick }: BookProps) => {
 
         <StarRating value={average ?? 0} readOnly />
         <p className="text-xs text-gray-500 line-clamp-2 mt-2">
-          "Review: Battle of the Bookstores" is a charming ...
+          {reviewCount !== null
+            ? `Based on ${reviewCount} user review${
+                reviewCount !== 1 ? "s" : ""
+              }`
+            : "No reviews yet"}
         </p>
       </div>
     </div>
   );
 };
 
-export default BookCardaLarge;
+export default BookCardLarge;

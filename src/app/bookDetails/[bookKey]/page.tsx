@@ -23,7 +23,7 @@ export default async function BookDetailPage({
 }: {
   params: { bookKey: string };
 }) {
-  const bookKey = params.bookKey;
+  const { bookKey } = await params;
   const bookData = await fetchBookData(bookKey);
 
   let authors: AuthorDetailsProps[] = [];

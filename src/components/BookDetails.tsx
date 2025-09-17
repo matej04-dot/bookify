@@ -67,7 +67,7 @@ function BookDetails({ bookKey, bookData, authors }: BookDetailsProps) {
   return (
     <>
       <div className="md:flex sm:w-full items-center justify-center md:mt-10 p-5 lg:w-4/5 lg:mx-auto">
-        <div className="sm:w-1/2 md:w-1/3 flex items-center justify-center border-2 border-yellow-400 bg-gray-200 rounded-lg shadow-lg relative p-3">
+        <div className="sm:w-1/2 md:w-1/3 flex items-center justify-center border-2 border-yellow-400 bg-gray-200 rounded-lg shadow-lg relative p-3 transition-transform transform hover:scale-105">
           {loading && (
             <div className="h-64 flex items-center justify-center">
               <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -85,7 +85,7 @@ function BookDetails({ bookKey, bookData, authors }: BookDetailsProps) {
         </div>
         <div className="md:w-3/4 md:pl-6 mt-3">
           <div className="mb-3">
-            <p className="text-3xl">{bookData.title}</p>
+            <p className="text-4xl font-bold text-gray-800">{bookData.title}</p>
             <p className="text-lg text-gray-600 italic mb-1 line-clamp-1">
               by{" "}
               {authors.length > 0
@@ -95,7 +95,7 @@ function BookDetails({ bookKey, bookData, authors }: BookDetailsProps) {
             <StarRating value={average ?? 0} readOnly />
           </div>
           <hr />
-          <p className="mt-2 border border-gray-200 rounded-lg p-3 text-gray-700">
+          <p className="mt-2 border border-gray-200 rounded-lg p-3 text-gray-700 bg-gray-50">
             {typeof bookData.description === "string"
               ? bookData.description
               : bookData.description?.value}
@@ -136,7 +136,7 @@ function BookDetails({ bookKey, bookData, authors }: BookDetailsProps) {
       <hr />
       <div className="m-5 lg:w-4/5 lg:mx-auto">
         <button
-          className="rounded-lg mb-3 p-2.5 text-gray-800 font-semibold bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg border border-yellow-400"
+          className="rounded-lg mb-3 p-2.5 text-white font-semibold bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-lg border border-yellow-500 transition-transform transform hover:scale-105"
           onClick={() => {
             const auth = getAuth();
             const isAuthenticated = !!auth.currentUser;
