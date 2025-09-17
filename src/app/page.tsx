@@ -1,4 +1,4 @@
-import BookCategory from "@/components/BookCategory";
+import BookCategoryServer from "@/components/BookCategoryServer";
 
 function BooksList() {
   return (
@@ -6,7 +6,7 @@ function BooksList() {
       <p className="ml-1.5 mt-1.5 text-sm text-gray-600">
         Check each product page for more details
       </p>
-      <BookCategory />
+      <BookCategoryServer />
     </div>
   );
 }

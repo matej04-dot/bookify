@@ -14,11 +14,10 @@ import type { BookData } from "@/types/Types";
 function BookCarouselRender({ data }: { data: BookData | null }) {
   const router = useRouter();
 
-  console.log(data);
   if (!data || !data.works || data.works.length === 0) {
     return (
       <p className="text-center text-gray-900 font-medium mt-5">
-        No books found 123
+        No books found
       </p>
     );
   }
