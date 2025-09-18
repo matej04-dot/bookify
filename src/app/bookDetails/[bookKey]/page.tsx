@@ -18,12 +18,12 @@ async function fetchBookData(bookKey: string): Promise<BookData | null> {
   return res.json();
 }
 
-export default async function BookDetailPage({
-  params,
-}: {
+interface BookDetailPageProps {
   params: { bookKey: string };
-}) {
-  const { bookKey } = await params;
+}
+
+export default async function BookDetailPage({ params }: BookDetailPageProps) {
+  const { bookKey } = params;
   const bookData = await fetchBookData(bookKey);
 
   let authors: AuthorDetailsProps[] = [];

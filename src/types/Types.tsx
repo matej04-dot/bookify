@@ -27,3 +27,8 @@ export interface Review {
   createdAt: any;
   updatedAt: any;
 }
+
+export interface PageProps<TParams = Record<string, string>> {
+  params: TParams;
+  searchParams?: Record<string, string | string[] | undefined>;
+}
