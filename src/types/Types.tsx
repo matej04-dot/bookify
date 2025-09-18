@@ -27,7 +27,7 @@ export interface Review {
   createdAt: any;
   updatedAt: any;
 }
-export interface PageProps<
+export interface AppPageProps<
   P extends Record<string, string> = Record<string, string>
 > {
   params: P;

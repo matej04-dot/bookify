@@ -1,10 +1,7 @@
 import AdminReviewList from "@/components/AdminReviewList";
+import { AppPageProps } from "@/types/Types";
 
-interface PageProps {
-  params: Promise<{ userId: string }>;
-}
-
-export default async function AdminUserReviewsPage({ params }: PageProps) {
+export default async function AdminUserReviewsPage({ params }: AppPageProps) {
   const { userId } = await params;
 
   return <AdminReviewList userId={userId} />;
