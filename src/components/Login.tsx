@@ -44,7 +44,7 @@ const Login: React.FC = () => {
         }
       }
 
-      router.push(from, { replace: true });
+      router.replace(from);
     } catch (err: any) {
       console.error(
         "Auth error:",
@@ -81,7 +81,7 @@ const Login: React.FC = () => {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-      router.push(from, { replace: true });
+      router.replace(from);
     } catch (err: any) {
       console.error(
         "Auth error:",
