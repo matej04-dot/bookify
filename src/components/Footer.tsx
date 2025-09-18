@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="bg-gradient-to-r from-blue-100 via-white to-blue-100 border-t shadow-inner mt-auto">
       <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-blue-700 text-lg">Bookify</span>
+          <span className="font-bold text-blue-700 text-lg">bookify</span>
           <span className="hidden md:inline text-gray-400">|</span>
           <span className="text-gray-500 text-sm">
             Discover. Review. Share.
@@ -32,7 +32,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="text-center text-xs text-gray-400 py-2 border-t">
-        © {new Date().getFullYear()} Bookify. All rights reserved.
+        © {new Date().getFullYear()} bookify. All rights reserved.
       </div>
     </footer>
   );
