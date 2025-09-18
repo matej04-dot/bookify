@@ -4,21 +4,18 @@ import { useState } from "react";
 import StarRating from "./Rating";
 import { addReview } from "../services/reviews";
 import { auth } from "../firebase-config";
-import { useSearchParams } from "next/navigation";
 
 type ReviewComponentProps = {
   onClose?: () => void;
   bookName?: string | null;
+  bookId?: string | null; // Accept bookId as a prop
 };
 
 export default function ReviewComponent({
   onClose,
   bookName,
+  bookId, // Use bookId prop
 }: ReviewComponentProps) {
-  const searchParams = useSearchParams();
-  const bookId = searchParams.get("bookId");
-  const bookKey = searchParams.get("bookKey");
-  const targetBookId = bookId ?? bookKey;
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +30,7 @@ export default function ReviewComponent({
       setError("Not authenticated");
       return;
     }
-    if (!targetBookId) {
+    if (!bookId) {
       setError("Missing book id");
       return;
     }
@@ -49,7 +46,7 @@ export default function ReviewComponent({
 
       const payload = {
         userId: user.uid,
-        bookId: targetBookId,
+        bookId: bookId, // Use bookId directly
         rating,
         comment: comment.trim() || null,
         username,

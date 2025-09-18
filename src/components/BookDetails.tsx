@@ -153,6 +153,7 @@ function BookDetails({ bookKey, bookData, authors }: BookDetailsProps) {
           <ReviewComponent
             onClose={() => setShowReviewModal(false)}
             bookName={bookData.title}
+            bookId={bookKey} // Pass bookKey as bookId
           />
         )}
         <ReviewsList bookId={bookKey} />
