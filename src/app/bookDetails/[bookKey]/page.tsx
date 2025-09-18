@@ -23,7 +23,7 @@ interface BookDetailPageProps {
 }
 
 export default async function BookDetailPage({ params }: BookDetailPageProps) {
-  const { bookKey } = await params;
+  const { bookKey } = params;
 
   const bookData = await fetchBookData(bookKey);
 
