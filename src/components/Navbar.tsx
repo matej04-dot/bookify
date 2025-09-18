@@ -1,7 +1,6 @@
 "use client";
 
 import Search from "./Search";
-import { useRouter } from "next/navigation";
 import NavbarUser from "./NavbarUser";
 import { useEffect, useState } from "react";
 import { auth } from "../firebase-config";
@@ -9,7 +8,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import Link from "next/link";
 
 export default function Navbar() {
-  const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -30,16 +28,20 @@ export default function Navbar() {
           {user ? (
             <NavbarUser />
           ) : (
-            <button
-              onClick={() =>
-                router.push("/login", {
-                  query: { from: window.location.pathname },
-                })
-              }
+            <Link
+              href={{
+                pathname: "/login",
+                query: {
+                  from:
+                    typeof window !== "undefined"
+                      ? window.location.pathname
+                      : "/",
+                },
+              }}
               className="bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-lg px-6 py-2 flex items-center justify-center font-semibold text-gray-900 hover:from-yellow-400 hover:to-yellow-500 hover:border-gray-700"
             >
               Login
-            </button>
+            </Link>
           )}
         </div>
       </div>

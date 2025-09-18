@@ -26,7 +26,7 @@ const NavbarUser: React.FC = () => {
       console.error("Logout failed:", err);
     } finally {
       setShowMenu(false);
-      router.push("/", { replace: true });
+      router.replace("/");
     }
   };
 
