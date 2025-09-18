@@ -1,5 +1,4 @@
 import "./App.css";
-import { RouterProvider } from "react-router-dom";
 import router from "./routes/routes";
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -61,7 +60,7 @@ function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <router.RouterProvider router={router.router} />
     </>
   );
 }
