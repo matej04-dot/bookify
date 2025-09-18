@@ -207,7 +207,7 @@ export default function AccountDetails() {
               <div className="w-full mt-4 flex gap-3">
                 {profile?.role === "admin" && (
                   <button
-                    onClick={() => router.push("/adminPanel")}
+                    onClick={() => router.push("/admin")}
                     className="flex-1 inline-flex justify-center items-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white font-semibold transition"
                   >
                     Adm. Panel
