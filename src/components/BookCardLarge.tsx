@@ -21,9 +21,9 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
   const [avgLoading, setAvgLoading] = useState(false);
   const [average, setAverage] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState<number | null>(null);
-  const coverUrl = book.cover_edition_key
-    ? `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`
-    : "/no-cover.jpg";
+  const coverUrl =
+    book.cover_edition_key &&
+    `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`;
 
   useEffect(() => {
     let mounted = true;

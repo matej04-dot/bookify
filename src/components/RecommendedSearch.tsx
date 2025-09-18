@@ -31,9 +31,9 @@ const RecommendedSearch: FC<RecommendedSearchProps> = ({
       style={{ zIndex: 20 }}
     >
       <div className="max-h-72 overflow-y-auto">
-        {recommendations.map((rec) => (
+        {recommendations.map((rec, index) => (
           <div
-            key={rec}
+            key={`${rec}-${index}`}
             className="flex items-center px-4 py-2 cursor-pointer hover:bg-blue-100 text-gray-500 hover:rounded-lg"
             onClick={() => handleSelect(rec)}
           >
