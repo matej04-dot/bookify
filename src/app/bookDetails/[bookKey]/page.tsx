@@ -20,10 +20,14 @@ async function fetchBookData(bookKey: string): Promise<BookData | null> {
 
 interface BookDetailPageProps {
   params: { bookKey: string };
+  bookData: BookData | null;
+  authors: AuthorDetailsProps[];
 }
 
-export default async function BookDetailPage({ params }: BookDetailPageProps) {
-  const { bookKey } = await params;
+export async function getServerSideProps(context: {
+  params: { bookKey: string };
+}) {
+  const { bookKey } = context.params;
   const bookData = await fetchBookData(bookKey);
 
   let authors: AuthorDetailsProps[] = [];
@@ -32,7 +36,25 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
     authors = await authorsData(authorKeys);
   }
 
+  return {
+    props: {
+      params: { bookKey },
+      bookData,
+      authors,
+    },
+  };
+}
+
+export default function BookDetailPage({
+  params,
+  bookData,
+  authors,
+}: BookDetailPageProps) {
   return (
-    <BookDetails bookKey={bookKey} bookData={bookData} authors={authors} />
+    <BookDetails
+      bookKey={params.bookKey}
+      bookData={bookData}
+      authors={authors}
+    />
   );
 }
