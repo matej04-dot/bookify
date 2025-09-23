@@ -11,8 +11,11 @@ if (!admin.apps.length) {
   });
 }
 
-export async function GET(_, { params }: { params: { bookId: string } }) {
-  const { bookId } = await params;
+export async function GET(
+  request: Request,
+  { params }: { params: { bookId: string } }
+) {
+  const { bookId } = params;
 
   const normalized = decodeURIComponent(bookId)
     .replace(/^\/?works\//i, "")
