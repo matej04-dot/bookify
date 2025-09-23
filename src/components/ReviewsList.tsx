@@ -12,10 +12,16 @@ export default async function ReviewsList({ bookId }: ReviewListProps) {
     );
   }
 
+  const baseUrl =
+    typeof window === "undefined"
+      ? process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      : "";
+
   try {
-    const res = await fetch(`/api/reviews/${encodeURIComponent(bookId)}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `${baseUrl}/api/reviews/${encodeURIComponent(bookId)}`,
+      { cache: "no-store" }
+    );
     if (!res.ok) {
       throw new Error("Failed to fetch reviews");
     }

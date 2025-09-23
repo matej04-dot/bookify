@@ -94,7 +94,7 @@ export default function BookDetails({
       <hr />
       <div className="m-5 lg:w-4/5 lg:mx-auto">
         <BookDetailsClient bookKey={bookKey} bookName={bookData.title} />
-        <ReviewsList bookId={bookKey} />
+        <ReviewsList bookId={bookKey.replace(/^\/?works\//i, "")} />
       </div>
     </>
   );
