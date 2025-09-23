@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   experimental: {},
   eslint: {
-    ignoreDuringBuilds: true, // ili obrisi ako ne zelis da preskaces ESLint
+    ignoreDuringBuilds: true,
   },
   outputFileTracingRoot: __dirname,
 };

@@ -4,6 +4,7 @@ import { baseUrl } from "@/utils/Constants";
 import type { AuthorDetailsProps } from "@/types/Types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type BookData = {
   covers?: number[];
