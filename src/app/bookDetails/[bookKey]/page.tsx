@@ -34,12 +34,11 @@ async function fetchBookData(bookKey: string): Promise<BookData | null> {
 }
 
 interface BookDetailPageProps {
-  params: { bookKey: string };
+  params: Promise<{ bookKey: string }>;
 }
 
 export default async function BookDetailPage({ params }: BookDetailPageProps) {
-  const resolvedParams = await params;
-  const { bookKey } = resolvedParams;
+  const { bookKey } = await params;
 
   const bookData = await fetchBookData(bookKey);
 
