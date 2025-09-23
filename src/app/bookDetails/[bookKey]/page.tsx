@@ -33,7 +33,6 @@ async function fetchBookData(bookKey: string): Promise<BookData | null> {
   }
 }
 
-// Definiraj props tip koji uključuje params kao Promise
 interface BookDetailPageProps {
   params: Promise<{ bookKey: string }>;
 }
@@ -65,6 +64,11 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
   }
 
   return (
-    <BookDetails bookKey={bookKey} bookData={bookData} authors={authors} />
+    <BookDetails
+      bookKey={bookKey}
+      bookData={bookData}
+      authors={authors}
+      average={0}
+    />
   );
 }
