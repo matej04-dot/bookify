@@ -11,11 +11,9 @@ if (!admin.apps.length) {
   });
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: { bookId: string } }
-) {
-  const { bookId } = params;
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const bookId = url.pathname.split("/").pop() || "";
 
   const normalized = decodeURIComponent(bookId)
     .replace(/^\/?works\//i, "")
