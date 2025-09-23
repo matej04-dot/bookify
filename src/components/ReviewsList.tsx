@@ -13,15 +13,9 @@ export default async function ReviewsList({ bookId }: ReviewListProps) {
   }
 
   try {
-    // Next.js 15 server component fetch mora imati apsolutni URL!
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
-
-    const res = await fetch(
-      `${baseUrl}/api/reviews/${encodeURIComponent(bookId)}`,
-      { cache: "no-store" }
-    );
+    const res = await fetch(`/api/reviews/${encodeURIComponent(bookId)}`, {
+      cache: "no-store",
+    });
     if (!res.ok) {
       throw new Error("Failed to fetch reviews");
     }
