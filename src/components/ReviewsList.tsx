@@ -1,74 +1,48 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  Query,
-  type DocumentData,
-  orderBy,
-} from "firebase/firestore";
-import { db } from "../firebase-config";
-import type { Review } from "../types/Types";
 import ReviewItem from "./ReviewItem";
+import type { Review } from "../types/Types";
 
 interface ReviewListProps {
   bookId?: string;
 }
 
-const ReviewsList: React.FC<ReviewListProps> = ({ bookId }) => {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function ReviewsList({ bookId }: ReviewListProps) {
+  if (!bookId) {
+    return (
+      <div className="text-center text-gray-500 m-2">No reviews found</div>
+    );
+  }
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      setLoading(true);
-      try {
-        if (!bookId) {
-          setReviews([]);
-          setLoading(false);
-          return;
-        }
+  try {
+    // Next.js 15 server component fetch mora imati apsolutni URL!
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000";
 
-        const normalized = decodeURIComponent(bookId)
-          .replace(/^\/?works\//i, "")
-          .trim();
+    const res = await fetch(
+      `${baseUrl}/api/reviews/${encodeURIComponent(bookId)}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) {
+      throw new Error("Failed to fetch reviews");
+    }
+    const reviews: Review[] = await res.json();
 
-        const col = collection(db, "reviews");
-        const q: Query<DocumentData> = query(
-          col,
-          where("bookId", "==", normalized),
-          orderBy("createdAt", "desc")
-        );
-        const querySnapshot = await getDocs(q);
-        const data: Review[] = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Review[];
-        setReviews(data);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-      }
-      setLoading(false);
-    };
-
-    fetchReviews();
-  }, [bookId]);
-
-  if (loading)
-    return <div className="text-center text-gray-500">Loading reviews...</div>;
-
-  return (
-    <div className="rounded-lg border mt-2 p-3 md:p-0 border-gray-200">
-      {reviews.length === 0 ? (
-        <div className="text-center text-gray-500 m-2">No reviews found</div>
-      ) : (
-        reviews.map((review) => <ReviewItem key={review.id} review={review} />)
-      )}
-    </div>
-  );
-};
-
-export default ReviewsList;
+    return (
+      <div className="rounded-lg border mt-2 p-3 md:p-0 border-gray-200">
+        {reviews.length === 0 ? (
+          <div className="text-center text-gray-500 m-2">No reviews found</div>
+        ) : (
+          reviews.map((review) => (
+            <ReviewItem key={review.id} review={review} />
+          ))
+        )}
+      </div>
+    );
+  } catch (err) {
+    return (
+      <div className="text-red-500">
+        Error loading reviews: {(err as Error).message}
+      </div>
+    );
+  }
+}

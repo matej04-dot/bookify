@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Review } from "../types/Types";
 import StarRating from "./Rating";
 
@@ -17,6 +18,12 @@ export default function ReviewItem({ review }: { review: Review }) {
         })
       : "Unknown Date";
 
+  const [pathname, setPathname] = useState<string>("");
+
+  useEffect(() => {
+    setPathname(window.location.pathname);
+  }, []);
+
   return (
     <div className="border-b border-gray-200 py-4 max-w-full md:max-w-xl lg:max-w-2xl mx-auto">
       <div className="mb-2 p-3 bg-accent rounded-lg">
@@ -27,9 +34,7 @@ export default function ReviewItem({ review }: { review: Review }) {
             className="w-10 h-10 rounded-full mr-4"
           />
           <h4 className="font-semibold mb-1.5">
-            {window.location.pathname === "/account"
-              ? review.bookName
-              : review.username}
+            {pathname === "/account" ? review.bookName : review.username}
           </h4>
         </div>
         <StarRating value={review.rating} readOnly />
