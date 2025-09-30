@@ -3,6 +3,7 @@ import { imagesBaseUrl } from "@/utils/Constants";
 import ReviewsList from "./ReviewsList";
 import BookDetailsClient from "./BookDetailsClient";
 import StarRating from "./Rating";
+import Image from "next/image";
 
 type BookDetailsProps = {
   bookKey: string;
@@ -34,8 +35,10 @@ export default function BookDetails({
       <div className="md:flex sm:w-full items-center justify-center md:mt-10 p-5 lg:w-4/5 lg:mx-auto">
         <div className="sm:w-1/2 md:w-1/3 flex items-center justify-center border-2 border-yellow-400 bg-gray-200 rounded-lg shadow-lg relative p-3 transition-transform transform hover:scale-105">
           {bookCover && (
-            <img
+            <Image
               src={bookCover}
+              width={200}
+              height={300}
               className="h-full object-cover block"
               alt={bookData.title}
             />

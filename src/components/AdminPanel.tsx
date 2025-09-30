@@ -100,7 +100,6 @@ function AdminPanel() {
 
         {!loading && !error && (
           <div className="space-y-6">
-            {/* Cards view for mobile + tablet (up to lg). On md+ show 2 columns for better tablet/laptop */}
             <div className="lg:hidden grid gap-4 sm:grid-cols-1 md:grid-cols-2">
               {users.length === 0 && (
                 <div className="p-6 text-center text-gray-500 bg-white rounded-lg shadow">

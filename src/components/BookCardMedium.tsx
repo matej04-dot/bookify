@@ -5,6 +5,7 @@ import { imagesBaseUrl } from "../utils/Constants";
 import StarRating from "./Rating";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase-config";
+import Image from "next/image";
 
 type BookProps = {
   book: {
@@ -70,15 +71,19 @@ const BookCardMedium = ({ book }: BookProps) => {
             <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
-        <img
-          src={coverUrl}
-          className={`rounded-t-lg h-36 sm:h-48 w-full object-cover m-2 ${
-            loading ? "hidden" : "block"
-          }`}
-          onLoad={() => setLoading(false)}
-          onError={() => setLoading(false)}
-          alt={`Cover for ${book.title}`}
-        />
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            width={150}
+            height={220}
+            className={`rounded-t-lg h-36 sm:h-48 w-full object-cover m-2 ${
+              loading ? "hidden" : "block"
+            }`}
+            onLoad={() => setLoading(false)}
+            onError={() => setLoading(false)}
+            alt={`Cover for ${book.title}`}
+          />
+        )}
       </div>
       <div className="w-full flex-grow p-3 sm:p-2 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
         <p className="font-semibold text-gray-800 leading-snug text-base sm:text-sm md:text-lg line-clamp-2">

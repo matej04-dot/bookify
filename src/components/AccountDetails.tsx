@@ -281,30 +281,27 @@ export default function AccountDetails() {
                     You haven't posted any reviews yet.
                   </div>
                 ) : (
-                  <div
+                  <section
                     role="region"
                     aria-label="User reviews"
-                    className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden"
+                    className="w-full"
                   >
                     <div
                       className={
-                        "p-4 md:p-5 overflow-y-auto " +
-                        "max-h-[60vh] md:max-h-[50vh] lg:max-h-[50vh] " +
-                        "space-y-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-50"
+                        "grid grid-cols-1 sm:grid-cols-2 gap-4 " +
+                        "max-h-[50vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-50"
                       }
                     >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {userReviews.map((review) => (
-                          <div
-                            key={review.id}
-                            className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition"
-                          >
-                            <ReviewItem review={review} />
-                          </div>
-                        ))}
-                      </div>
+                      {userReviews.map((review) => (
+                        <div
+                          key={review.id}
+                          className="bg-white p-0 border-0 shadow-none"
+                        >
+                          <ReviewItem review={review} />
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  </section>
                 )}
               </section>
             </main>
