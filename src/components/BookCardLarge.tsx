@@ -86,7 +86,6 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
             onLoad={() => setLoading(false)}
             onError={() => setLoading(false)}
             alt={`Cover for ${book.title}`}
-            unoptimized
           />
         ) : (
           <div className="h-36 sm:h-48 w-full flex items-center justify-center bg-gray-300 text-gray-500">
