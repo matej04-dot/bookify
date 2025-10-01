@@ -75,7 +75,7 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
             <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
-        {coverUrl && (
+        {coverUrl ? (
           <Image
             src={coverUrl}
             width={150}
@@ -87,6 +87,10 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
             onError={() => setLoading(false)}
             alt={`Cover for ${book.title}`}
           />
+        ) : (
+          <div className="h-36 sm:h-48 w-full flex items-center justify-center bg-gray-300 text-gray-500">
+            No cover
+          </div>
         )}
       </div>
       <div className="w-full flex-grow p-3 sm:p-2 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
