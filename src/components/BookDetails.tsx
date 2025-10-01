@@ -41,6 +41,7 @@ export default function BookDetails({
               height={300}
               className="h-full object-cover block"
               alt={bookData.title}
+              priority
             />
           )}
         </div>

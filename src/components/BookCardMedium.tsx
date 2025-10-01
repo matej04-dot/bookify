@@ -82,6 +82,7 @@ const BookCardMedium = ({ book }: BookProps) => {
             onLoad={() => setLoading(false)}
             onError={() => setLoading(false)}
             alt={`Cover for ${book.title}`}
+            priority
           />
         ) : (
           <div className="h-36 sm:h-48 w-full flex items-center justify-center bg-gray-300 text-gray-500">
