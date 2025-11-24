@@ -30,38 +30,55 @@ export default function BookDetails({
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex flex-col md:flex-row gap-8">
           {/* Book Cover */}
-          <div className="lg:col-span-1 flex justify-center lg:justify-start">
-            <div className="relative group w-full max-w-sm">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
-              <div className="relative bg-white rounded-2xl shadow-xl p-4 transition-transform duration-300 hover:scale-[1.02]">
-                {bookCover && (
+          <div className="flex-shrink-0 flex justify-center md:justify-start">
+            <div className="relative group w-48 md:w-56">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl blur opacity-20 group-hover:opacity-35 transition duration-300"></div>
+              <div className="relative bg-white rounded-xl shadow-lg p-3 transition-transform duration-300 hover:scale-[1.02]">
+                {bookCover ? (
                   <Image
                     src={bookCover}
                     width={200}
                     height={300}
-                    className="w-full h-auto object-cover rounded-xl aspect-[2/3]"
+                    className="w-full h-auto object-cover rounded-lg aspect-[2/3]"
                     alt={bookData.title || "Book cover"}
                     priority
                   />
+                ) : (
+                  <div className="w-full aspect-[2/3] bg-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400">
+                    <svg
+                      className="w-12 h-12 mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    <span className="text-sm">No cover</span>
+                  </div>
                 )}
               </div>
             </div>
           </div>
 
           {/* Book Details */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="flex-1 space-y-5">
             {/* Title */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
               {bookData.title}
             </h1>
 
             {/* Authors */}
-            <div className="flex items-center gap-2 text-lg text-gray-600">
+            <div className="flex items-center gap-2 text-base text-gray-600">
               <svg
-                className="w-5 h-5 text-blue-600"
+                className="w-5 h-5 text-blue-600 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -84,10 +101,10 @@ export default function BookDetails({
             <BookRating bookKey={bookKey} />
 
             {/* Description */}
-            <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-xl p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-xl p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <svg
-                  className="w-6 h-6 text-blue-600"
+                  className="w-5 h-5 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -101,7 +118,7 @@ export default function BookDetails({
                 </svg>
                 About this book
               </h2>
-              <p className="text-gray-700 leading-relaxed text-base">
+              <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
                 {typeof bookData.description === "string"
                   ? bookData.description
                   : bookData.description?.value || "No description available."}
@@ -113,69 +130,62 @@ export default function BookDetails({
 
       {/* About the Author */}
       {authors[0] && (
-        <div className="container mx-auto px-4 mt-12 max-w-7xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-            <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
+        <div className="container mx-auto px-4 mt-10 max-w-6xl">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+            <div className="w-1 h-6 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
             About the Author
           </h2>
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 md:p-8">
-              <div className="md:col-span-1">
-                {authors[0].photos?.[0] && (
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="flex flex-col sm:flex-row gap-5 p-5 sm:p-6">
+              {/* Author Photo & Info */}
+              <div className="flex-shrink-0 flex flex-col items-center sm:items-start">
+                {authors[0].photos?.[0] ? (
+                  <div className="relative group w-24 sm:w-28">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg blur opacity-20 group-hover:opacity-35 transition duration-300"></div>
                     <img
                       src={`${imagesBaseUrl}/b/id/${authors[0].photos[0]}-M.jpg`}
-                      className="relative rounded-xl shadow-lg w-full h-auto"
+                      className="relative rounded-lg shadow-md w-full h-auto"
                       alt={authors[0].name}
                     />
                   </div>
+                ) : (
+                  <div className="w-24 sm:w-28 aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                    <svg
+                      className="w-10 h-10"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </div>
                 )}
-                <div className="mt-4 space-y-2 text-sm text-gray-600">
-                  <p className="font-bold text-lg text-gray-900">
+                <div className="mt-3 text-center sm:text-left">
+                  <p className="font-bold text-base text-gray-900">
                     {authors[0].name}
                   </p>
                   {authors[0].birth_date && (
-                    <div className="flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>Born: {authors[0].birth_date}</span>
-                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Born: {authors[0].birth_date}
+                    </p>
                   )}
                   {authors[0]?.death_date && (
-                    <div className="flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <span>Died: {authors[0].death_date}</span>
-                    </div>
+                    <p className="text-xs text-gray-500">
+                      Died: {authors[0].death_date}
+                    </p>
                   )}
                 </div>
               </div>
-              <div className="md:col-span-3">
-                <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border border-blue-100">
-                  <p className="text-gray-700 leading-relaxed text-base">
+
+              {/* Author Bio */}
+              <div className="flex-1 min-w-0">
+                <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-lg border border-blue-100 h-full">
+                  <p className="text-gray-700 leading-relaxed text-sm">
                     {typeof authors[0].bio === "string"
                       ? authors[0].bio
                       : authors[0].bio?.value || "No biography available."}
@@ -188,10 +198,10 @@ export default function BookDetails({
       )}
 
       {/* Reviews Section */}
-      <div className="container mx-auto px-4 mt-12 mb-12 max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
+      <div className="container mx-auto px-4 mt-10 mb-10 max-w-6xl">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <div className="w-1 h-6 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
             Reviews
           </h2>
         </div>

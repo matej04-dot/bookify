@@ -27,10 +27,14 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
     book.cover_edition_key &&
     `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`;
 
-  // Reset loading state when there's no cover
+  // Reset states when cover URL changes
   useEffect(() => {
     if (!coverUrl) {
       setLoading(false);
+      setImageError(true);
+    } else {
+      setLoading(true);
+      setImageError(false);
     }
   }, [coverUrl]);
 
@@ -78,7 +82,7 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
       className="flex rounded-lg shadow-lg border border-gray-200 hover:shadow-xl hover:border-blue-100 transition-shadow duration-300 bg-white"
     >
       <div className="bg-gray-100 rounded-l-lg flex-shrink-0 flex items-center justify-center w-40 sm:w-48 p-3">
-        {loading && coverUrl && (
+        {loading && !imageError && (
           <div className="h-36 sm:h-48 w-full flex items-center justify-center">
             <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
@@ -99,11 +103,11 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
             alt={`Cover for ${book.title}`}
             priority
           />
-        ) : !loading ? (
-          <div className="h-36 sm:h-48 w-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg">
-            <div className="text-center p-2">
+        ) : (
+          !loading && (
+            <div className="h-36 sm:h-48 w-full flex flex-col items-center justify-center bg-gray-200 rounded-lg text-gray-400">
               <svg
-                className="w-12 h-12 mx-auto text-gray-400 mb-2"
+                className="w-12 h-12 mb-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -115,12 +119,10 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                 />
               </svg>
-              <span className="text-gray-500 text-xs font-medium">
-                No Cover
-              </span>
+              <span className="text-sm">No cover</span>
             </div>
-          </div>
-        ) : null}
+          )
+        )}
       </div>
       <div className="w-full flex-grow p-3 sm:p-2 justify-around m-1.5 h-44 sm:h-48 flex flex-col">
         <p className="font-semibold text-gray-800 leading-snug text-base sm:text-sm md:text-lg line-clamp-2">
