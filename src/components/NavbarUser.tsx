@@ -30,35 +30,39 @@ const NavbarUser: React.FC = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+    );
   if (!user) return null;
 
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
     user.displayName || user.email || "User"
-  )}`;
+  )}&background=2563eb&color=ffffff&bold=true`;
 
   return (
     <div className="relative z-50">
       <button
-        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg 
-        bg-gray-800 hover:bg-gray-700 transition-all duration-200 ease-in-out
-        border border-gray-700 hover:border-gray-600 shadow-sm"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg 
+        bg-gray-100 hover:bg-gray-200 transition-all duration-200
+        border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md"
         onClick={() => setShowMenu((v) => !v)}
+        aria-label="User menu"
       >
         <img
           src={avatarUrl}
-          alt="avatar"
-          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-600"
+          alt="User avatar"
+          className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
         />
-        <span className="hidden sm:inline font-medium text-sm sm:text-base text-gray-200">
+        <span className="hidden md:inline font-semibold text-sm text-gray-700">
           {user.displayName || user.email?.split("@")[0]}
         </span>
         <svg
-          className={`w-4 h-4 ml-0.5 sm:ml-1 transition-transform duration-200 ${
+          className={`w-4 h-4 text-gray-600 transition-transform duration-200 hidden md:block ${
             showMenu ? "rotate-180" : "rotate-0"
           }`}
           fill="none"
-          stroke="#e5e7eb"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path
@@ -70,56 +74,82 @@ const NavbarUser: React.FC = () => {
         </svg>
       </button>
       {showMenu && (
-        <div
-          className="absolute right-0 mt-1 w-56 sm:w-64 md:w-72 bg-gray-100 rounded-lg border border-gray-200 
-        shadow-lg transform opacity-100 scale-100 transition-all duration-200 ease-in-out"
-        >
-          <div className="py-2">
-            <button
-              className="flex items-center w-full px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-700 hover:bg-gray-50 
-              hover:text-gray-900 transition-colors duration-150"
-              onClick={() => {
-                setShowMenu(false);
-                router.push("/account");
-              }}
-            >
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowMenu(false)}
+          />
+          <div
+            className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 
+          shadow-2xl z-50 overflow-hidden"
+          >
+            {/* User Info Header */}
+            <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+              <div className="flex items-center gap-3">
+                <img
+                  src={avatarUrl}
+                  alt="User avatar"
+                  className="w-12 h-12 rounded-full ring-2 ring-blue-200 shadow-sm"
                 />
-              </svg>
-              Account details
-            </button>
-            <button
-              className="flex items-center w-full px-3 sm:px-4 py-2 text-sm sm:text-base text-red-600 hover:bg-red-50 
-              hover:text-red-700 transition-colors duration-150"
-              onClick={handleLogout}
-            >
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">
+                    {user.displayName || "User"}
+                  </p>
+                  <p className="text-xs text-gray-600 truncate">{user.email}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="py-2">
+              <button
+                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 
+                hover:text-blue-700 transition-colors duration-150 font-medium group"
+                onClick={() => {
+                  setShowMenu(false);
+                  router.push("/account");
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-              Log out
-            </button>
+                <svg
+                  className="w-5 h-5 mr-3 text-gray-400 group-hover:text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                My Account
+              </button>
+
+              <div className="border-t border-gray-100 my-1"></div>
+
+              <button
+                className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 
+                hover:text-red-700 transition-colors duration-150 font-medium group"
+                onClick={handleLogout}
+              >
+                <svg
+                  className="w-5 h-5 mr-3 text-red-400 group-hover:text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Sign Out
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

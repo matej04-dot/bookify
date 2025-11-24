@@ -5,31 +5,57 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import RecommendedSearch from "./RecommendedSearch";
 import { baseUrl } from "@/utils/Constants";
 
-const fetchBookTitles = async (query: string): Promise<string[]> => {
-  if (!query.trim()) return [];
+const fetchBookTitles = async (
+  query: string,
+  retries = 2
+): Promise<string[]> => {
+  if (!query.trim() || query.trim().length < 2) return [];
 
   const url = `${baseUrl}/search.json?q=${encodeURIComponent(
     query
   )}&mode=everything&limit=5`;
 
-  try {
-    const res = await fetch(url);
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(
-        `HTTP error! Status: ${res.status}, Message: ${
-          errorData.message || "No message"
-        }`
-      );
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "book-app/1.0",
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (!data.docs || data.docs.length === 0) {
+          return [];
+        }
+        return data.docs.map((book: { title: string }) => book.title);
+      }
+
+      // If it's a server error, retry
+      if (res.status >= 500 && attempt < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        continue;
+      }
+
+      console.warn(`Search API error: ${res.status}`);
+      return [];
+    } catch (error) {
+      // Retry on network errors or timeouts
+      if (attempt < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        continue;
+      }
+      console.warn("Search temporarily unavailable");
+      return [];
     }
-
-    const data = await res.json();
-    return data.docs.map((book: { title: string }) => book.title);
-  } catch (error) {
-    console.error("Error fetching book titles:", error);
-    throw error;
   }
+  return [];
 };
 
 export default function Search() {
@@ -39,17 +65,27 @@ export default function Search() {
   const [recommendVisible, setRecommendVisible] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
 
-    if (newValue.trim().length > 0) {
-      const results = await fetchBookTitles(
-        newValue.trim().replace(/\s+/g, "+")
-      );
-      setRecommendations(results);
-      setRecommendVisible(true);
+    // Clear previous timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Only fetch if query is at least 2 characters
+    if (newValue.trim().length >= 2) {
+      // Debounce API calls by 300ms
+      debounceTimeoutRef.current = setTimeout(async () => {
+        const results = await fetchBookTitles(
+          newValue.trim().replace(/\s+/g, "+")
+        );
+        setRecommendations(results);
+        setRecommendVisible(results.length > 0);
+      }, 300);
     } else {
       setRecommendations([]);
       setRecommendVisible(false);
@@ -81,12 +117,31 @@ export default function Search() {
     document.addEventListener("mousedown", handleDocumentClick);
     return () => {
       document.removeEventListener("mousedown", handleDocumentClick);
+      // Cleanup debounce timeout on unmount
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, []);
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <div className="flex w-full">
+      <div className="relative flex items-center">
+        <div className="absolute left-4 pointer-events-none">
+          <svg
+            className="w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
         <input
           type="text"
           value={value}
@@ -96,13 +151,18 @@ export default function Search() {
             }
           }}
           onChange={handleChange}
-          placeholder="Search books..."
-          className="bg-gray-100 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-1 border border-gray-300 focus:border-1 focus:border-yellow-400 flex-grow"
+          placeholder="Search for books, authors, or topics..."
+          className="w-full pl-12 pr-24 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl 
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                     text-gray-900 placeholder-gray-400 transition-all duration-200
+                     hover:bg-gray-100 focus:bg-white"
         />
         <button
           type="submit"
           onClick={handleClick}
-          className="bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-r-lg px-5 py-2 flex items-center justify-center font-semibold text-gray-900 hover:from-yellow-400 hover:to-yellow-500 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute right-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white 
+                     rounded-lg font-medium text-sm transition-colors duration-200 
+                     disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
         >
           Search
         </button>

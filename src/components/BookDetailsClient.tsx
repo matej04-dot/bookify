@@ -15,7 +15,10 @@ export default function BookDetailsClient({
   return (
     <>
       <button
-        className="rounded-lg mb-3 p-2.5 text-white font-semibold bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-lg border border-yellow-500 transition-transform transform hover:scale-105"
+        className="inline-flex items-center gap-2 px-6 py-3 mb-6 text-white font-semibold 
+                   bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg 
+                   hover:shadow-xl transition-all duration-200 hover:scale-105 
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         onClick={() => {
           const auth = getAuth();
           const isAuthenticated = !!auth.currentUser;
@@ -26,7 +29,20 @@ export default function BookDetailsClient({
           }
         }}
       >
-        Make Review
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+        </svg>
+        Write a Review
       </button>
       {showReviewModal && (
         <ReviewComponent

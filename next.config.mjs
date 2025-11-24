@@ -6,7 +6,10 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {},
+  experimental: {
+    // Optimized package imports za brže buildovanje
+    optimizePackageImports: ["@/components", "@/services"],
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -20,7 +23,19 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+    // Optimizacija slika
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  // Kompresija za brže učitavanje
+  compress: true,
+  // Powered by header
+  poweredByHeader: false,
+  // Reaktivnost
+  reactStrictMode: true,
+  // Generiranje static exporta gdje je moguće
+  trailingSlash: false,
 };
 
 export default nextConfig;

@@ -11,13 +11,17 @@ import {
 import type { Review } from "../types/Types";
 
 export async function addReview(review: Review) {
-  if (!review || !review.userId) throw new Error("Invalid review payload: missing userId");
-  if (!review.bookId) throw new Error("Invalid review payload: missing bookId (set from URL before calling)");
+  if (!review || !review.userId)
+    throw new Error("Invalid review payload: missing userId");
+  if (!review.bookId)
+    throw new Error(
+      "Invalid review payload: missing bookId (set from URL before calling)"
+    );
 
   const colRef = collection(db, "reviews");
 
-  const newDocRef = doc(colRef); 
-  const aggRef = doc(db, "bookAvgRating", review.bookId);
+  const newDocRef = doc(colRef);
+  const aggRef = doc(db, "bookAvgRatings", review.bookId);
 
   try {
     await runTransaction(db, async (tx) => {
@@ -84,19 +88,21 @@ export async function updateReview(
 
       const reviewData: any = reviewSnap.data();
       const oldRating = Number(reviewData.rating ?? 0);
-      const hasNewRating = typeof params.rating === "number" && !isNaN(params.rating);
+      const hasNewRating =
+        typeof params.rating === "number" && !isNaN(params.rating);
       const newRating = hasNewRating ? Number(params.rating) : oldRating;
 
       const updatePayload: any = {
         updatedAt: serverTimestamp(),
       };
       if ("comment" in params) updatePayload.comment = params.comment ?? null;
-      if ("username" in params) updatePayload.username = params.username ?? reviewData.username ?? null;
+      if ("username" in params)
+        updatePayload.username = params.username ?? reviewData.username ?? null;
       if (hasNewRating) updatePayload.rating = newRating;
 
       const bookId = reviewData.bookId;
       if (!bookId) throw new Error("Review missing bookId");
-      const aggRef = doc(db, "bookAvgRating", bookId);
+      const aggRef = doc(db, "bookAvgRatings", bookId);
       const aggSnap = await tx.get(aggRef);
 
       tx.update(reviewRef, updatePayload);

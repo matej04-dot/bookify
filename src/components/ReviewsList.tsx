@@ -20,7 +20,9 @@ export default async function ReviewsList({ bookId }: ReviewListProps) {
   try {
     const res = await fetch(
       `${baseUrl}/api/reviews/${encodeURIComponent(bookId)}`,
-      { cache: "no-store" }
+      {
+        next: { revalidate: 300 }, // 5 minuta cache za reviews
+      }
     );
     if (!res.ok) {
       throw new Error("Failed to fetch reviews");

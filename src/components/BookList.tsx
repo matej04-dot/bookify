@@ -59,19 +59,30 @@ const ProjectsListInfinite: React.FC = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading)
-    return <p className="text-center text-gray-500 py-8">Loading books...</p>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="mt-3 text-gray-600">Loading books...</p>
+        </div>
+      </div>
+    );
 
   if (isError)
     return (
-      <p className="text-center text-red-500 py-8">Error: {error.message}</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <p className="text-red-600 font-medium">Error: {error.message}</p>
+        </div>
+      </div>
     );
 
   console.log(data);
 
   return (
-    <>
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
       <OrderBy value={order} onChange={setOrder} />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 p-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
         {data?.pages.map((page, i) => (
           <React.Fragment key={i}>
             {page.data.map((book) => (
@@ -93,13 +104,18 @@ const ProjectsListInfinite: React.FC = () => {
       <div ref={loadMoreRef} className="h-10" />
 
       {isFetchingNextPage && (
-        <p className="text-center text-gray-500 py-4">Loading more...</p>
+        <div className="flex items-center justify-center py-8">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mr-2"></div>
+          <p className="text-gray-600">Loading more...</p>
+        </div>
       )}
 
-      {!hasNextPage && (
-        <p className="text-center text-gray-400 py-4">No more books</p>
+      {!hasNextPage && data?.pages[0]?.data.length > 0 && (
+        <p className="text-center text-gray-500 py-8 text-sm">
+          You&apos;ve reached the end
+        </p>
       )}
-    </>
+    </div>
   );
 };
 
