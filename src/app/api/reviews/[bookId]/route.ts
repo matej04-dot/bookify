@@ -40,6 +40,8 @@ export async function GET(request: Request) {
       .replace(/^\/?works\//i, "")
       .trim();
 
+    console.log("Fetching reviews for bookId:", normalized);
+
     const db = firebaseAdmin.firestore();
     const snapshot = await db
       .collection("reviews")
@@ -52,11 +54,13 @@ export async function GET(request: Request) {
       ...doc.data(),
     }));
 
+    console.log("Found reviews:", data.length);
+
     return NextResponse.json(data);
-  } catch (error) {
-    console.error("API Error:", error);
+  } catch (error: any) {
+    console.error("API Error:", error?.message || error);
     return NextResponse.json(
-      { error: "Failed to fetch reviews" },
+      { error: error?.message || "Failed to fetch reviews" },
       { status: 500 }
     );
   }

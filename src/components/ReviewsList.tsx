@@ -27,7 +27,9 @@ export default async function ReviewsList({ bookId }: ReviewListProps) {
     );
 
     if (!res.ok) {
-      throw new Error("Failed to fetch reviews");
+      const errorText = await res.text();
+      console.error("API response error:", res.status, errorText);
+      throw new Error(`Failed to fetch reviews: ${res.status}`);
     }
 
     const reviews: Review[] = await res.json();
