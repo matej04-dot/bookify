@@ -1,5 +1,10 @@
 import { db } from "../firebase-config";
-import { doc, runTransaction, getDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  runTransaction,
+  getDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 export interface BookRatingAvg {
   bookId: string;
@@ -9,8 +14,10 @@ export interface BookRatingAvg {
   updatedAt?: any;
 }
 
-export async function getAverageRating(bookId: string): Promise<BookRatingAvg | null> {
-  const ref = doc(db, "bookAvgRatings", bookId);
+export async function getAverageRating(
+  bookId: string
+): Promise<BookRatingAvg | null> {
+  const ref = doc(db, "bookAvgRating", bookId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   const data: any = snap.data();
@@ -24,7 +31,7 @@ export async function getAverageRating(bookId: string): Promise<BookRatingAvg | 
 }
 
 export async function incrementAverageRating(bookId: string, rating: number) {
-  const ref = doc(db, "bookAvgRatings", bookId);
+  const ref = doc(db, "bookAvgRating", bookId);
   try {
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(ref);
@@ -53,8 +60,12 @@ export async function incrementAverageRating(bookId: string, rating: number) {
   }
 }
 
-export async function adjustAverageRating(bookId: string, oldRating: number, newRating: number) {
-  const ref = doc(db, "bookAvgRatings", bookId);
+export async function adjustAverageRating(
+  bookId: string,
+  oldRating: number,
+  newRating: number
+) {
+  const ref = doc(db, "bookAvgRating", bookId);
   try {
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(ref);
@@ -84,7 +95,7 @@ export async function adjustAverageRating(bookId: string, oldRating: number, new
 }
 
 export async function decrementAverageRating(bookId: string, rating: number) {
-  const ref = doc(db, "bookAvgRatings", bookId);
+  const ref = doc(db, "bookAvgRating", bookId);
   try {
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(ref);

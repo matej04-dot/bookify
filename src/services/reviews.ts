@@ -21,7 +21,7 @@ export async function addReview(review: Review) {
   const colRef = collection(db, "reviews");
 
   const newDocRef = doc(colRef);
-  const aggRef = doc(db, "bookAvgRatings", review.bookId);
+  const aggRef = doc(db, "bookAvgRating", review.bookId);
 
   try {
     await runTransaction(db, async (tx) => {
@@ -102,7 +102,7 @@ export async function updateReview(
 
       const bookId = reviewData.bookId;
       if (!bookId) throw new Error("Review missing bookId");
-      const aggRef = doc(db, "bookAvgRatings", bookId);
+      const aggRef = doc(db, "bookAvgRating", bookId);
       const aggSnap = await tx.get(aggRef);
 
       tx.update(reviewRef, updatePayload);

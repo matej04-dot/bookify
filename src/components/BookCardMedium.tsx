@@ -65,10 +65,23 @@ const BookCardMedium = ({ book }: BookProps) => {
 
   return (
     <div className="flex flex-col items-center justify-between shadow-lg border border-gray-300 rounded-lg hover:shadow-xl transition-shadow duration-300 w-full sm:w-40 sm:max-w-xs bg-white mx-auto h-full">
-      <div className="bg-gray-200 rounded-t-lg flex-shrink-0 flex items-center justify-center w-full">
+      <div className="bg-gray-200 rounded-t-lg flex-shrink-0 flex items-center justify-center w-full min-h-[160px] sm:min-h-[208px]">
         {loading && (
-          <div className="h-51 flex items-center justify-center">
-            <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="h-36 sm:h-48 w-full flex flex-col items-center justify-center bg-gray-300 rounded-t-lg animate-pulse">
+            <svg
+              className="w-10 h-10 text-gray-400 mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <div className="h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
         {coverUrl ? (
@@ -85,9 +98,11 @@ const BookCardMedium = ({ book }: BookProps) => {
             priority
           />
         ) : (
-          <div className="h-36 sm:h-48 w-full flex items-center justify-center bg-gray-300 text-gray-500">
-            No cover
-          </div>
+          !loading && (
+            <div className="h-36 sm:h-48 w-full flex items-center justify-center bg-gray-300 text-gray-500">
+              No cover
+            </div>
+          )
         )}
       </div>
       <div className="w-full flex-grow p-3 sm:p-2 justify-around m-1.5 h-44 sm:h-48 flex flex-col">

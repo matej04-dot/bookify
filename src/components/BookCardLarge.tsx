@@ -81,9 +81,22 @@ const BookCardLarge = ({ book, onClick }: BookProps) => {
       onClick={onClick}
       className="flex rounded-lg shadow-lg border border-gray-200 hover:shadow-xl hover:border-blue-100 transition-shadow duration-300 bg-white"
     >
-      <div className="bg-gray-100 rounded-l-lg flex-shrink-0 flex items-center justify-center w-40 sm:w-48 p-3">
+      <div className="bg-gray-100 rounded-l-lg flex-shrink-0 flex items-center justify-center w-40 sm:w-48 p-3 min-h-[168px] sm:min-h-[216px]">
         {loading && !imageError && (
-          <div className="h-36 sm:h-48 w-full flex items-center justify-center">
+          <div className="h-36 sm:h-48 w-full flex flex-col items-center justify-center bg-gray-200 rounded-lg animate-pulse">
+            <svg
+              className="w-12 h-12 text-gray-400 mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
             <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
