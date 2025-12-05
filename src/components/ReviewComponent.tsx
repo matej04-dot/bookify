@@ -44,9 +44,12 @@ export default function ReviewComponent({
       const username =
         user.displayName ?? (user.email ? user.email.split("@")[0] : null);
 
+      // Normalize bookId - remove /works/ prefix if present
+      const normalizedBookId = bookId.replace(/^\/?works\//i, "").trim();
+
       const payload = {
         userId: user.uid,
-        bookId: bookId, // Use bookId directly
+        bookId: normalizedBookId,
         rating,
         comment: comment.trim() || null,
         username,

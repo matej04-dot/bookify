@@ -43,6 +43,14 @@ export async function GET(request: Request) {
     console.log("Fetching reviews for bookId:", normalized);
 
     const db = firebaseAdmin.firestore();
+
+    // First, let's see ALL reviews for debugging
+    const allReviewsSnap = await db.collection("reviews").limit(20).get();
+    console.log(
+      "All reviews bookIds:",
+      allReviewsSnap.docs.map((d) => d.data().bookId)
+    );
+
     const snapshot = await db
       .collection("reviews")
       .where("bookId", "==", normalized)
@@ -54,7 +62,7 @@ export async function GET(request: Request) {
       ...doc.data(),
     }));
 
-    console.log("Found reviews:", data.length);
+    console.log("Found reviews for", normalized, ":", data.length);
 
     return NextResponse.json(data);
   } catch (error: any) {
