@@ -479,11 +479,11 @@ export default function AccountDetails() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="grid grid-cols-1 gap-5 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                     {userReviews.map((review) => (
                       <div
                         key={review.id}
-                        className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-xl transition-all duration-200 hover:scale-[1.02] hover:border-blue-300"
+                        className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-blue-300 hover:bg-blue-50/30 transition-all duration-200"
                       >
                         <ReviewItem review={review} />
                       </div>
