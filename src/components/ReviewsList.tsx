@@ -1,5 +1,31 @@
 import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
+import admin from "firebase-admin";
+
+// Initialize Firebase Admin only when needed (not at build time)
+function getFirebaseAdmin() {
+  if (admin.apps.length) {
+    return admin;
+  }
+
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+
+  if (!privateKey || !projectId || !clientEmail) {
+    throw new Error("Firebase Admin environment variables are not configured.");
+  }
+
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId,
+      clientEmail,
+      privateKey: privateKey.replace(/\\n/g, "\n"),
+    }),
+  });
+
+  return admin;
+}
 
 interface ReviewListProps {
   bookId?: string;
@@ -12,22 +38,22 @@ export default async function ReviewsList({ bookId }: ReviewListProps) {
     );
   }
 
-  const baseUrl =
-    typeof window === "undefined"
-      ? process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-      : "";
-
   try {
-    const res = await fetch(
-      `${baseUrl}/api/reviews/${encodeURIComponent(bookId)}`,
-      {
-        next: { revalidate: 300 }, // 5 minuta cache za reviews
-      }
-    );
-    if (!res.ok) {
-      throw new Error("Failed to fetch reviews");
-    }
-    const reviews: Review[] = await res.json();
+    const firebaseAdmin = getFirebaseAdmin();
+    const db = firebaseAdmin.firestore();
+
+    const normalized = bookId.replace(/^\/?works\//i, "").trim();
+
+    const snapshot = await db
+      .collection("reviews")
+      .where("bookId", "==", normalized)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const reviews: Review[] = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Review[];
 
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 max-w-2xl mx-auto">
