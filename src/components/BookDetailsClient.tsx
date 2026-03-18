@@ -15,10 +15,7 @@ export default function BookDetailsClient({
   return (
     <>
       <button
-        className="inline-flex items-center gap-2 px-6 py-3 mb-6 text-white font-semibold 
-                   bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg 
-                   hover:shadow-xl transition-all duration-200 hover:scale-105 
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="mb-6 inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2"
         onClick={() => {
           const auth = getAuth();
           const isAuthenticated = !!auth.currentUser;

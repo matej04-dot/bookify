@@ -1,6 +1,6 @@
 "use client";
 
-import BookCardaMedium from "./BookCardMedium";
+import BookCardMedium from "./BookCardMedium";
 import {
   Carousel,
   CarouselContent,
@@ -47,7 +47,7 @@ function BookCarouselRender({ data }: { data: BookData | null }) {
               key={book.key || index}
               className="pl-4 basis-[40%] sm:basis-[28.57%] lg:basis-[22.22%] xl:basis-[15.38%]"
             >
-              <BookCardaMedium book={book} />
+              <BookCardMedium book={book} />
             </CarouselItem>
           ))}
         </CarouselContent>

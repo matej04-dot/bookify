@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function hasUserDoc(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && hasUserDoc(request.auth.uid)
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function ratingIsValid() {
+      return request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+    }
+
+    // users: owner moze kreirati svoj dokument bez role; admin moze sve
+    match /users/{uid} {
+      allow get: if isSignedIn() && (isOwner(uid) || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isSignedIn() && (
+        // Admin moze kreirati bilo koji users doc
+        isAdmin()
+        // Vlasnik moze kreirati samo svoj doc i ne smije postaviti role
+        || (
+          isOwner(uid)
+          && !('role' in request.resource.data)
+        )
+      );
+
+      allow update: if isSignedIn() && (
+        // Admin moze sve
+        isAdmin()
+        // Vlasnik smije updateati svoj doc, ali ne smije mijenjati role
+        || (
+          isOwner(uid)
+          && !request.resource.data.diff(resource.data).changedKeys().hasAny(['role'])
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // reviews: javno citanje; create/update/delete od strane vlasnika ili admina
+    match /reviews/{reviewId} {
+      allow get, list: if true;
+
+      allow create: if isSignedIn()
+        && ratingIsValid()
+        && request.resource.data.bookId is string
+        && request.resource.data.bookId.size() > 0
+        && request.resource.data.userId is string
+        && (
+          isAdmin() || request.resource.data.userId == request.auth.uid
+        );
+
+      allow update: if isSignedIn()
+        && ratingIsValid()
+        && (
+          isAdmin() || request.auth.uid == resource.data.userId
+        )
+        // userId i bookId su immutable nakon create
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.bookId == resource.data.bookId;
+
+      allow delete: if isSignedIn() && (
+        isAdmin() || request.auth.uid == resource.data.userId
+      );
+    }
+
+    // bookAvgRating: javno citanje; pisanje samo admin (ili backend preko Admin SDK)
+    match /bookAvgRating/{bookId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

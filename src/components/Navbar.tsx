@@ -34,8 +34,8 @@ export default function Navbar() {
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
-          : "bg-white shadow-md"
+          ? "bg-white/92 backdrop-blur-xl shadow-sm border-b border-slate-200"
+          : "bg-white/98 border-b border-slate-100"
       }`}
     >
       <div className="container mx-auto px-4 max-w-7xl">
@@ -43,15 +43,13 @@ export default function Navbar() {
         <div className="hidden md:flex items-center justify-between py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-blue-600 rounded-lg blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
-            </div>
+            <div className="h-10 w-1.5 rounded-full bg-gradient-to-b from-blue-500 to-blue-700" />
             <div className="flex flex-col">
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+              <span className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">
                 bookify
               </span>
               <span className="text-xs text-gray-500 -mt-1">
-                Discover your next book
+                Reviews and reading intelligence
               </span>
             </div>
           </Link>
@@ -71,11 +69,10 @@ export default function Navbar() {
                   pathname: "/login",
                   query: { from: fromPath },
                 }}
-                className="group relative inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105"
+                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-600 px-5 py-2.5 text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 <svg
-                  className="w-5 h-5 relative z-10"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -87,7 +84,7 @@ export default function Navbar() {
                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                   />
                 </svg>
-                <span className="relative z-10">Sign In</span>
+                <span>Sign In</span>
               </Link>
             )}
           </div>
@@ -99,7 +96,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between py-3">
             {/* Mobile Logo */}
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+              <span className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">
                 bookify
               </span>
             </Link>
@@ -114,7 +111,7 @@ export default function Navbar() {
                     pathname: "/login",
                     query: { from: fromPath },
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
                 >
                   <svg
                     className="w-4 h-4"

@@ -55,7 +55,6 @@ export default function ReviewComponent({
         username,
         bookName: bookName || null,
       };
-      console.log("Submitting review payload:", payload);
       await addReview(payload as any);
       setRating(0);
       setComment("");

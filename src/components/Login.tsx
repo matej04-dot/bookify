@@ -25,6 +25,14 @@ const Login: React.FC = () => {
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/";
 
+  const getSafeRedirectPath = (inputPath: string) => {
+    if (!inputPath || !inputPath.startsWith("/")) return "/";
+    if (inputPath.startsWith("//")) return "/";
+    return inputPath;
+  };
+
+  const safeRedirectPath = getSafeRedirectPath(from);
+
   const handleGoogleLogin = async () => {
     setError(null);
     setLoading(true);
@@ -44,12 +52,12 @@ const Login: React.FC = () => {
         }
       }
 
-      router.replace(from);
+      router.replace(safeRedirectPath);
     } catch (err: any) {
       console.error(
         "Auth error:",
         err?.code ?? err?.name ?? err,
-        err?.message ?? err
+        err?.message ?? err,
       );
       setError(err.message ?? String(err));
     } finally {
@@ -66,7 +74,7 @@ const Login: React.FC = () => {
         const userCred = await createUserWithEmailAndPassword(
           auth,
           email,
-          password
+          password,
         );
         if (auth.currentUser && nickname) {
           await updateProfile(auth.currentUser, { displayName: nickname });
@@ -81,12 +89,12 @@ const Login: React.FC = () => {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-      router.replace(from);
+      router.replace(safeRedirectPath);
     } catch (err: any) {
       console.error(
         "Auth error:",
         err?.code ?? err?.name ?? err,
-        err?.message ?? err
+        err?.message ?? err,
       );
       setError(err.message ?? String(err));
     } finally {
@@ -95,21 +103,22 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600 p-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxIDEuNzktNCAzLjk5OC00SDQyYzIuMjA4IDAgNCAxLjc5IDQgNHYyYzAgMi4yMS0xLjc5MiA0LTQgNGgtMi4wMDJBNC4wMDQgNC4wMDQgMCAwMTM2IDM2di0yem0wLTMwYzAtMi4yMSAxLjc5LTQgMy45OTgtNEg0MmMyLjIwOCAwIDQgMS43OSA0IDR2MmMwIDIuMjEtMS43OTIgNC00IDRoLTIuMDAyQTQuMDA0IDQuMDA0IDAgMDEzNiA2VjR6TTYgMzRjMC0yLjIxIDEuNzktNCAzLjk5OC00SDEyYzIuMjA4IDAgNCAxLjc5IDQgNHYyYzAgMi4yMS0xLjc5MiA0LTQgNGgtMi4wMDJBNC4wMDQgNC4wMDQgMCAwMTYgMzZ2LTJ6bTAtMzBjMC0yLjIxIDEuNzktNCAzLjk5OC00SDEyYzIuMjA4IDAgNCAxLjc5IDQgNHYyYzAgMi4yMS0xLjc5MiA0LTQgNGgtMi4wMDJBNC4wMDQgNC4wMDQgMCAwMTYgNlY0eiIvPjwvZz48L2c+PC9zdmc+')] opacity-20"></div>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(59,130,246,0.12),transparent_34%)]" />
 
       <div className="relative w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-white mb-2 tracking-tight">
+          <h1 className="text-5xl font-bold text-slate-900 mb-2 tracking-tight">
             bookify
           </h1>
-          <p className="text-blue-100 text-lg">Discover. Review. Share.</p>
+          <p className="text-slate-500 text-base">
+            Book discovery and review platform
+          </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 backdrop-blur-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white px-8 py-10 shadow-xl">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               {isRegister ? "Create Account" : "Welcome Back"}
@@ -140,7 +149,7 @@ const Login: React.FC = () => {
 
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 hover:border-blue-500 hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-xl transition-all duration-200 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white py-3 font-semibold text-slate-700 transition-all duration-200 hover:border-blue-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={loading}
             type="button"
           >
@@ -233,7 +242,7 @@ const Login: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+              className="w-full rounded-xl bg-blue-600 py-3 font-bold text-white shadow-md transition-all duration-200 hover:bg-blue-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={loading}
             >
               {loading ? (
@@ -305,16 +314,16 @@ const Login: React.FC = () => {
 
         {/* Footer Links */}
         <div className="mt-6 text-center">
-          <div className="flex items-center justify-center gap-4 text-sm text-blue-100">
-            <a href="/" className="hover:text-white transition-colors">
+          <div className="flex items-center justify-center gap-4 text-sm text-slate-500">
+            <a href="/" className="hover:text-slate-700 transition-colors">
               Home
             </a>
             <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">
+            <a href="#" className="hover:text-slate-700 transition-colors">
               Privacy
             </a>
             <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">
+            <a href="#" className="hover:text-slate-700 transition-colors">
               Terms
             </a>
           </div>

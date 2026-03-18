@@ -19,7 +19,6 @@ export function useFetch<T>(url: string, options?: UseFetchOptions) {
             ...(options?.headers || {}),
           },
         });
-        console.log(res);
         if (!res.ok) throw new Error(`Error ${res.status}`);
 
         const json = (await res.json()) as T;

@@ -1,33 +1,5 @@
 import { NextResponse } from "next/server";
-import admin from "firebase-admin";
-
-// Initialize Firebase Admin only when needed (not at build time)
-function getFirebaseAdmin() {
-  if (admin.apps.length) {
-    return admin;
-  }
-
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-
-  if (!privateKey || !projectId || !clientEmail) {
-    throw new Error(
-      "Firebase Admin environment variables are not configured. " +
-        "Please set FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID, and FIREBASE_CLIENT_EMAIL."
-    );
-  }
-
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId,
-      clientEmail,
-      privateKey: privateKey.replace(/\\n/g, "\n"),
-    }),
-  });
-
-  return admin;
-}
+import { getFirebaseAdmin } from "@/lib/firebase-admin";
 
 export async function GET(request: Request) {
   try {
@@ -40,16 +12,11 @@ export async function GET(request: Request) {
       .replace(/^\/?works\//i, "")
       .trim();
 
-    console.log("Fetching reviews for bookId:", normalized);
+    if (!normalized || normalized.length > 128 || /[^a-zA-Z0-9_-]/.test(normalized)) {
+      return NextResponse.json({ error: "Invalid book id" }, { status: 400 });
+    }
 
     const db = firebaseAdmin.firestore();
-
-    // First, let's see ALL reviews for debugging
-    const allReviewsSnap = await db.collection("reviews").limit(20).get();
-    console.log(
-      "All reviews bookIds:",
-      allReviewsSnap.docs.map((d) => d.data().bookId)
-    );
 
     const snapshot = await db
       .collection("reviews")
@@ -61,8 +28,6 @@ export async function GET(request: Request) {
       id: doc.id,
       ...doc.data(),
     }));
-
-    console.log("Found reviews for", normalized, ":", data.length);
 
     return NextResponse.json(data);
   } catch (error: any) {

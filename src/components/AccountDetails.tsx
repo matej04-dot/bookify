@@ -14,6 +14,8 @@ import {
 } from "firebase/firestore";
 import type { QueryDocumentSnapshot } from "firebase/firestore";
 import ReviewItem from "./ReviewItem";
+import { Spinner } from "./ui/spinner";
+import { EmptyState } from "./ui/empty-state";
 
 export default function AccountDetails() {
   const router = useRouter();
@@ -53,7 +55,7 @@ export default function AccountDetails() {
 
     const q = query(
       collection(db, "reviews"),
-      where("userId", "==", authUser.uid)
+      where("userId", "==", authUser.uid),
     );
 
     reviewsUnsubRef.current = onSnapshot(
@@ -68,13 +70,13 @@ export default function AccountDetails() {
           const ta = a.createdAt?.toDate
             ? a.createdAt.toDate().getTime()
             : a.createdAt
-            ? Number(a.createdAt)
-            : 0;
+              ? Number(a.createdAt)
+              : 0;
           const tb = b.createdAt?.toDate
             ? b.createdAt.toDate().getTime()
             : b.createdAt
-            ? Number(b.createdAt)
-            : 0;
+              ? Number(b.createdAt)
+              : 0;
           return tb - ta;
         });
 
@@ -82,7 +84,7 @@ export default function AccountDetails() {
       },
       (err) => {
         console.error("User reviews snapshot error:", err);
-      }
+      },
     );
 
     return () => {
@@ -120,7 +122,7 @@ export default function AccountDetails() {
               console.error("AccountDetails snapshot error:", err);
               setError("Failed to load profile");
               setLoading(false);
-            }
+            },
           );
         } else {
           setLoading(false);
@@ -130,7 +132,7 @@ export default function AccountDetails() {
         console.error("Auth state error:", err);
         setError("Auth error");
         setLoading(false);
-      }
+      },
     );
 
     return () => {
@@ -141,51 +143,54 @@ export default function AccountDetails() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="mt-3 text-gray-600">Loading your account...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Spinner label="Loading your account..." />
       </div>
     );
   if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center max-w-md">
-          <p className="text-red-600 font-medium">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md w-full px-4">
+          <EmptyState
+            tone="danger"
+            title="Account unavailable"
+            description={error}
+          />
         </div>
       </div>
     );
   if (!authUser)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center max-w-md shadow-sm">
-          <p className="text-gray-600">Not signed in</p>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md w-full px-4">
+          <EmptyState
+            title="Not signed in"
+            description="Please sign in to access your account details."
+          />
         </div>
       </div>
     );
 
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    authUser.displayName || "User"
+    authUser.displayName || "User",
   )}&background=eff6ff&color=0f172a&size=256`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-6 sm:py-8">
+    <div className="min-h-screen bg-background py-6 sm:py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        {/* Header with Home Button */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-4 border-b border-border pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-1 h-10 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <div className="h-10 w-1 rounded-full bg-primary/70"></div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">
               My Account
             </h1>
           </div>
           <button
             onClick={() => router.push("/")}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-blue-600 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary/50 hover:text-primary"
           >
             <svg
-              className="w-5 h-5"
+              className="h-4 w-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -197,39 +202,36 @@ export default function AccountDetails() {
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
               />
             </svg>
-            <span className="hidden sm:inline">Home</span>
+            <span>Home</span>
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm">
           <div className="flex flex-col lg:flex-row gap-6 p-6 sm:p-8">
-            {/* Left Sidebar */}
             <aside className="w-full lg:w-80 flex flex-col items-center lg:items-start">
-              <div className="relative group mb-4">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+              <div className="mb-4 rounded-2xl border border-border bg-muted/40 p-2">
                 <img
                   src={avatarUrl}
                   alt={authUser.displayName ?? "User avatar"}
-                  className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-xl"
+                  className="h-28 w-28 rounded-xl object-cover sm:h-32 sm:w-32"
                 />
               </div>
 
               <div className="text-center lg:text-left w-full mb-6">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words mb-1">
+                <h2 className="mb-1 break-words text-2xl font-semibold text-foreground sm:text-3xl">
                   {authUser.displayName ?? profile?.displayName ?? "—"}
                 </h2>
-                <p className="text-sm text-gray-500 break-all">
+                <p className="break-all text-sm text-muted-foreground">
                   {authUser.email ?? profile?.email ?? "—"}
                 </p>
               </div>
 
-              {/* Stats Grid */}
               <div className="w-full mb-6">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 text-center shadow-sm">
+                  <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
                     <div className="flex items-center justify-center mb-1">
                       <svg
-                        className="w-5 h-5 text-blue-600"
+                        className="h-5 w-5 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -242,17 +244,17 @@ export default function AccountDetails() {
                         />
                       </svg>
                     </div>
-                    <div className="text-2xl font-bold text-blue-900">
+                    <div className="text-2xl font-semibold text-foreground">
                       {userReviews.length}
                     </div>
-                    <div className="text-xs text-blue-700 font-medium mt-1">
+                    <div className="mt-1 text-xs font-medium text-muted-foreground">
                       Reviews
                     </div>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 text-center shadow-sm">
+                  <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
                     <div className="flex items-center justify-center mb-1">
                       <svg
-                        className="w-5 h-5 text-gray-600"
+                        className="h-5 w-5 text-muted-foreground"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -266,30 +268,29 @@ export default function AccountDetails() {
                       </svg>
                     </div>
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                         profile?.role === "admin"
-                          ? "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 border border-amber-300"
-                          : "bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 border border-gray-400"
+                          ? "border border-amber-300/60 bg-amber-100/80 text-amber-900"
+                          : "border border-border bg-background text-muted-foreground"
                       }`}
                     >
                       {profile?.role ?? "user"}
                     </span>
-                    <div className="text-xs text-gray-600 font-medium mt-2">
+                    <div className="mt-2 text-xs font-medium text-muted-foreground">
                       Account Role
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="w-full flex flex-col gap-3">
                 {profile?.role === "admin" && (
                   <button
                     onClick={() => router.push("/admin")}
-                    className="w-full inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-3 font-semibold text-primary transition hover:bg-primary/15"
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="h-5 w-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -312,10 +313,10 @@ export default function AccountDetails() {
                 )}
                 <button
                   onClick={handleClick}
-                  className="w-full inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-300/50 bg-red-50 px-5 py-3 font-semibold text-red-700 transition hover:bg-red-100"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="h-5 w-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -332,12 +333,11 @@ export default function AccountDetails() {
               </div>
             </aside>
 
-            {/* Main Content */}
             <main className="flex-1">
               <div className="mb-8">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold text-foreground sm:text-2xl">
                   <svg
-                    className="w-6 h-6 text-blue-600"
+                    className="h-6 w-6 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -353,10 +353,10 @@ export default function AccountDetails() {
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="rounded-2xl border border-border bg-muted/40 p-5">
                     <div className="flex items-center gap-2 mb-2">
                       <svg
-                        className="w-5 h-5 text-blue-600"
+                        className="h-5 w-5 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -368,19 +368,19 @@ export default function AccountDetails() {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
-                      <div className="text-xs font-semibold text-blue-700 uppercase">
+                      <div className="text-xs font-semibold uppercase text-muted-foreground">
                         Display Name
                       </div>
                     </div>
-                    <div className="text-base font-medium text-gray-900 break-words">
+                    <div className="break-words text-base font-medium text-foreground">
                       {authUser.displayName ?? profile?.displayName ?? "—"}
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="rounded-2xl border border-border bg-muted/40 p-5">
                     <div className="flex items-center gap-2 mb-2">
                       <svg
-                        className="w-5 h-5 text-blue-600"
+                        className="h-5 w-5 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -392,11 +392,11 @@ export default function AccountDetails() {
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <div className="text-xs font-semibold text-blue-700 uppercase">
+                      <div className="text-xs font-semibold uppercase text-muted-foreground">
                         Last Login
                       </div>
                     </div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-foreground">
                       {profile?.lastLogin
                         ? profile.lastLogin
                             .toDate()
@@ -413,12 +413,11 @@ export default function AccountDetails() {
                 </div>
               </div>
 
-              {/* Reviews Section */}
               <section>
-                <div className="flex items-center justify-between mb-5 pb-4 border-b-2 border-gray-200">
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
+                  <h3 className="flex items-center gap-2 text-xl font-semibold text-foreground sm:text-2xl">
                     <svg
-                      className="w-6 h-6 text-blue-600"
+                      className="h-6 w-6 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -432,15 +431,15 @@ export default function AccountDetails() {
                     </svg>
                     Your Reviews
                   </h3>
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                  <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
                     {userReviews.length}
                   </div>
                 </div>
 
                 {userReviews.length === 0 ? (
-                  <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-white p-12 text-center">
+                  <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-12 text-center">
                     <svg
-                      className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                      className="mx-auto mb-4 h-16 w-16 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -452,18 +451,18 @@ export default function AccountDetails() {
                         d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
                       />
                     </svg>
-                    <p className="text-lg text-gray-900 font-semibold mb-2">
+                    <p className="mb-2 text-lg font-semibold text-foreground">
                       No reviews yet
                     </p>
-                    <p className="text-sm text-gray-500 mb-6">
+                    <p className="mb-6 text-sm text-muted-foreground">
                       Start exploring books and share your thoughts!
                     </p>
                     <button
                       onClick={() => router.push("/")}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                      className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:bg-primary/90"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="h-5 w-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -479,11 +478,11 @@ export default function AccountDetails() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-5 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="grid max-h-[600px] grid-cols-1 gap-5 overflow-y-auto pr-2">
                     {userReviews.map((review) => (
                       <div
                         key={review.id}
-                        className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-blue-300 hover:bg-blue-50/30 transition-all duration-200"
+                        className="rounded-2xl border border-border bg-background p-5 transition hover:border-primary/40 hover:shadow-sm"
                       >
                         <ReviewItem review={review} />
                       </div>
@@ -495,22 +494,6 @@ export default function AccountDetails() {
           </div>
         </div>
       </div>
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #3b82f6;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #2563eb;
-        }
-      `}</style>
     </div>
   );
 }

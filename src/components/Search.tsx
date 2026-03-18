@@ -7,18 +7,25 @@ import { baseUrl } from "@/utils/Constants";
 
 const fetchBookTitles = async (
   query: string,
-  retries = 2
+  signal: AbortSignal,
+  retries = 2,
 ): Promise<string[]> => {
   if (!query.trim() || query.trim().length < 2) return [];
 
   const url = `${baseUrl}/search.json?q=${encodeURIComponent(
-    query
+    query,
   )}&mode=everything&limit=5`;
 
   for (let attempt = 0; attempt < retries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const abortHandler = () => controller.abort();
+
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+      if (signal.aborted) {
+        return [];
+      }
+      signal.addEventListener("abort", abortHandler, { once: true });
 
       const res = await fetch(url, {
         signal: controller.signal,
@@ -27,14 +34,20 @@ const fetchBookTitles = async (
         },
       });
 
-      clearTimeout(timeoutId);
-
       if (res.ok) {
         const data = await res.json();
-        if (!data.docs || data.docs.length === 0) {
+        const docs = Array.isArray(data?.docs) ? data.docs : [];
+        if (docs.length === 0) {
           return [];
         }
-        return data.docs.map((book: { title: string }) => book.title);
+        const uniqueTitles = new Set<string>();
+        for (const book of docs) {
+          if (typeof book?.title === "string" && book.title.trim()) {
+            uniqueTitles.add(book.title.trim());
+          }
+          if (uniqueTitles.size >= 5) break;
+        }
+        return Array.from(uniqueTitles);
       }
 
       // If it's a server error, retry
@@ -46,6 +59,9 @@ const fetchBookTitles = async (
       console.warn(`Search API error: ${res.status}`);
       return [];
     } catch (error) {
+      if (signal.aborted) {
+        return [];
+      }
       // Retry on network errors or timeouts
       if (attempt < retries - 1) {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -53,6 +69,9 @@ const fetchBookTitles = async (
       }
       console.warn("Search temporarily unavailable");
       return [];
+    } finally {
+      clearTimeout(timeoutId);
+      signal.removeEventListener("abort", abortHandler);
     }
   }
   return [];
@@ -63,13 +82,16 @@ export default function Search() {
   const [value, setValue] = useState("");
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [recommendVisible, setRecommendVisible] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const activeRequestRef = useRef<AbortController | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
+    setIsNavigating(false);
 
     // Clear previous timeout
     if (debounceTimeoutRef.current) {
@@ -80,9 +102,16 @@ export default function Search() {
     if (newValue.trim().length >= 2) {
       // Debounce API calls by 300ms
       debounceTimeoutRef.current = setTimeout(async () => {
+        activeRequestRef.current?.abort();
+        const controller = new AbortController();
+        activeRequestRef.current = controller;
+
         const results = await fetchBookTitles(
-          newValue.trim().replace(/\s+/g, "+")
+          newValue.trim(),
+          controller.signal,
         );
+        if (controller.signal.aborted) return;
+
         setRecommendations(results);
         setRecommendVisible(results.length > 0);
       }, 300);
@@ -92,16 +121,30 @@ export default function Search() {
     }
   };
 
+  const navigateToSearch = useCallback(
+    (rawValue: string) => {
+      const trimmed = rawValue.trim();
+      if (!trimmed || isNavigating) return;
+
+      setIsNavigating(true);
+      const formatted = encodeURIComponent(trimmed);
+      activeRequestRef.current?.abort();
+      setRecommendations([]);
+      setRecommendVisible(false);
+
+      const searchKey = `/search?q=${formatted}&mode=everything`;
+      router.push(searchKey);
+    },
+    [isNavigating, router],
+  );
+
   const handleClick = useCallback(() => {
-    const formatted = value.trim().replace(/\s+/g, "+");
-    const searchKey = `/search?q=${formatted}&mode=everything`;
-    setRecommendVisible(false);
-    router.push(`${searchKey}`);
-  }, [router, value]);
+    navigateToSearch(value);
+  }, [navigateToSearch, value]);
 
   const handleSelectRecommendation = (rec: string) => {
     setValue(rec);
-    setRecommendVisible(false);
+    navigateToSearch(rec);
   };
 
   useEffect(() => {
@@ -110,7 +153,6 @@ export default function Search() {
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        setValue("");
         setRecommendVisible(false);
       }
     };
@@ -121,15 +163,16 @@ export default function Search() {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
+      activeRequestRef.current?.abort();
     };
   }, []);
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <div className="relative flex items-center">
+      <div className="relative flex items-center rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="absolute left-4 pointer-events-none">
           <svg
-            className="w-5 h-5 text-gray-400"
+            className="w-5 h-5 text-slate-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -147,22 +190,19 @@ export default function Search() {
           value={value}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
+              e.preventDefault();
               handleClick();
             }
           }}
           onChange={handleChange}
           placeholder="Search for books, authors, or topics..."
-          className="w-full pl-12 pr-24 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                     text-gray-900 placeholder-gray-400 transition-all duration-200
-                     hover:bg-gray-100 focus:bg-white"
+          className="w-full rounded-xl bg-transparent py-3 pl-12 pr-24 text-sm text-slate-900 placeholder-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         <button
-          type="submit"
+          type="button"
           onClick={handleClick}
-          className="absolute right-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white 
-                     rounded-lg font-medium text-sm transition-colors duration-200 
-                     disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+          disabled={isNavigating || !value.trim()}
+          className="absolute right-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Search
         </button>

@@ -26,17 +26,20 @@ export default function BookDetails({
     ? `${imagesBaseUrl}/b/id/${coverId}-M.jpg`
     : undefined;
 
-  if (!bookData) return <div>No book data found</div>;
+  if (!bookData)
+    return (
+      <div className="px-4 py-10 text-center text-muted-foreground">
+        No book data found
+      </div>
+    );
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Book Cover */}
           <div className="flex-shrink-0 flex justify-center md:justify-start">
-            <div className="relative group w-48 md:w-56">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl blur opacity-20 group-hover:opacity-35 transition duration-300"></div>
-              <div className="relative bg-white rounded-xl shadow-lg p-3 transition-transform duration-300 hover:scale-[1.02]">
+            <div className="w-48 md:w-56">
+              <div className="rounded-2xl border border-border bg-card p-3 shadow-sm transition hover:shadow-md">
                 {bookCover ? (
                   <Image
                     src={bookCover}
@@ -47,7 +50,7 @@ export default function BookDetails({
                     priority
                   />
                 ) : (
-                  <div className="w-full aspect-[2/3] bg-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400">
+                  <div className="flex aspect-[2/3] w-full flex-col items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <svg
                       className="w-12 h-12 mb-2"
                       fill="none"
@@ -68,17 +71,14 @@ export default function BookDetails({
             </div>
           </div>
 
-          {/* Book Details */}
           <div className="flex-1 space-y-5">
-            {/* Title */}
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl lg:text-4xl">
               {bookData.title}
             </h1>
 
-            {/* Authors */}
-            <div className="flex items-center gap-2 text-base text-gray-600">
+            <div className="flex items-center gap-2 text-base text-muted-foreground">
               <svg
-                className="w-5 h-5 text-blue-600 flex-shrink-0"
+                className="h-5 w-5 flex-shrink-0 text-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -97,14 +97,12 @@ export default function BookDetails({
               </span>
             </div>
 
-            {/* Rating */}
             <BookRating bookKey={bookKey} />
 
-            {/* Description */}
-            <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-xl p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold text-foreground">
                 <svg
-                  className="w-5 h-5 text-blue-600"
+                  className="h-5 w-5 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -118,7 +116,7 @@ export default function BookDetails({
                 </svg>
                 About this book
               </h2>
-              <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+              <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
                 {typeof bookData.description === "string"
                   ? bookData.description
                   : bookData.description?.value || "No description available."}
@@ -128,28 +126,25 @@ export default function BookDetails({
         </div>
       </div>
 
-      {/* About the Author */}
       {authors[0] && (
-        <div className="container mx-auto px-4 mt-10 max-w-6xl">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-            <div className="w-1 h-6 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
+        <div className="container mx-auto mt-10 max-w-6xl px-4">
+          <h2 className="mb-4 flex items-center gap-3 text-xl font-semibold text-foreground sm:text-2xl">
+            <div className="h-6 w-1 rounded-full bg-primary/70"></div>
             About the Author
           </h2>
-          <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="flex flex-col sm:flex-row gap-5 p-5 sm:p-6">
-              {/* Author Photo & Info */}
               <div className="flex-shrink-0 flex flex-col items-center sm:items-start">
                 {authors[0].photos?.[0] ? (
-                  <div className="relative group w-24 sm:w-28">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg blur opacity-20 group-hover:opacity-35 transition duration-300"></div>
+                  <div className="w-24 sm:w-28">
                     <img
                       src={`${imagesBaseUrl}/b/id/${authors[0].photos[0]}-M.jpg`}
-                      className="relative rounded-lg shadow-md w-full h-auto"
+                      className="h-auto w-full rounded-lg border border-border"
                       alt={authors[0].name}
                     />
                   </div>
                 ) : (
-                  <div className="w-24 sm:w-28 aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                  <div className="flex aspect-square w-24 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:w-28">
                     <svg
                       className="w-10 h-10"
                       fill="none"
@@ -166,26 +161,25 @@ export default function BookDetails({
                   </div>
                 )}
                 <div className="mt-3 text-center sm:text-left">
-                  <p className="font-bold text-base text-gray-900">
+                  <p className="text-base font-semibold text-foreground">
                     {authors[0].name}
                   </p>
                   {authors[0].birth_date && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Born: {authors[0].birth_date}
                     </p>
                   )}
                   {authors[0]?.death_date && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Died: {authors[0].death_date}
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Author Bio */}
               <div className="flex-1 min-w-0">
-                <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-lg border border-blue-100 h-full">
-                  <p className="text-gray-700 leading-relaxed text-sm">
+                <div className="h-full rounded-xl border border-border bg-muted/30 p-4">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     {typeof authors[0].bio === "string"
                       ? authors[0].bio
                       : authors[0].bio?.value || "No biography available."}
@@ -197,11 +191,10 @@ export default function BookDetails({
         </div>
       )}
 
-      {/* Reviews Section */}
-      <div className="container mx-auto px-4 mt-10 mb-10 max-w-6xl">
+      <div className="container mx-auto mt-10 mb-10 max-w-6xl px-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="w-1 h-6 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
+          <h2 className="flex items-center gap-3 text-xl font-semibold text-foreground sm:text-2xl">
+            <div className="h-6 w-1 rounded-full bg-primary/70"></div>
             Reviews
           </h2>
         </div>

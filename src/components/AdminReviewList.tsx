@@ -2,17 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { db } from "../firebase-config";
+import { auth, db } from "../firebase-config";
 import {
   collection,
   query,
   where,
   onSnapshot,
+  doc,
+  getDoc,
   type QueryDocumentSnapshot,
   type DocumentData,
 } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
+import { Spinner } from "./ui/spinner";
 
 interface AdminReviewListProps {
   userId?: string;
@@ -23,8 +27,37 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
   const [reviews, setReviews] = useState<(Review & { id: string })[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user?.uid) {
+        setIsAdmin(false);
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const role = userDoc.exists() ? (userDoc.data().role as string) : null;
+        setIsAdmin(role === "admin");
+      } catch {
+        setIsAdmin(false);
+      } finally {
+        setAuthLoading(false);
+      }
+    });
+
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (authLoading || !isAdmin) {
+      setLoading(false);
+      return;
+    }
+
     if (!userId) {
       setError("Missing user id");
       setLoading(false);
@@ -48,13 +81,13 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
           const ta = a.createdAt?.toDate
             ? a.createdAt.toDate().getTime()
             : a.createdAt
-            ? Number(a.createdAt)
-            : 0;
+              ? Number(a.createdAt)
+              : 0;
           const tb = b.createdAt?.toDate
             ? b.createdAt.toDate().getTime()
             : b.createdAt
-            ? Number(b.createdAt)
-            : 0;
+              ? Number(b.createdAt)
+              : 0;
           return tb - ta;
         });
 
@@ -65,27 +98,56 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
         console.error("AdminReviewList snapshot error:", err);
         setError("Failed to load reviews");
         setLoading(false);
-      }
+      },
     );
 
     return () => unsub();
-  }, [userId]);
+  }, [userId, authLoading, isAdmin]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Spinner label="Checking permissions..." />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-xl rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
+          <h2 className="mb-2 text-2xl font-semibold text-red-800">
+            Access denied
+          </h2>
+          <p className="mb-5 text-red-700">
+            You do not have admin permissions to access this page.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="inline-flex items-center justify-center rounded-full border border-red-300/60 bg-white px-5 py-2.5 font-semibold text-red-700 transition hover:bg-red-100"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-1 h-12 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
+              <div className="h-12 w-1 rounded-full bg-primary/70"></div>
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
                   User Reviews
                 </h2>
-                <p className="text-sm text-gray-600 mt-1 break-words">
+                <p className="mt-1 break-words text-sm text-muted-foreground">
                   Managing reviews for:{" "}
-                  <span className="font-semibold text-blue-600 font-mono text-xs">
+                  <span className="font-mono text-xs font-semibold text-primary">
                     {userId}
                   </span>
                 </p>
@@ -95,13 +157,11 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 
-                         border-2 border-gray-300 text-gray-700 rounded-xl font-semibold 
-                         transition-all duration-200 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 font-semibold text-foreground transition hover:bg-muted"
                 onClick={() => router.push("/admin")}
               >
                 <svg
-                  className="w-5 h-5"
+                  className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -117,13 +177,11 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-blue-600 
-                         text-blue-600 rounded-xl font-semibold hover:bg-blue-50 
-                         transition-all duration-200 shadow-md hover:shadow-lg"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 font-semibold text-foreground transition hover:border-primary/50 hover:text-primary"
                 onClick={() => router.push("/")}
               >
                 <svg
-                  className="w-5 h-5"
+                  className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -141,19 +199,16 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
           <div className="p-6 sm:p-8">
             {loading && (
               <div className="py-16 flex flex-col items-center justify-center">
-                <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mb-4"></div>
-                <p className="text-blue-600 font-medium animate-pulse">
-                  Loading reviews...
-                </p>
+                <Spinner size="lg" label="Loading reviews..." />
               </div>
             )}
 
             {error && (
-              <div className="mb-6 rounded-xl bg-red-50 border-2 border-red-200 p-6 text-center">
+              <div className="mb-6 rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
                 <svg
                   className="mx-auto h-12 w-12 text-red-600 mb-3"
                   fill="none"
@@ -167,14 +222,14 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p className="text-red-700 font-semibold">{error}</p>
+                <p className="font-semibold text-red-700">{error}</p>
               </div>
             )}
 
             {!loading && !error && reviews.length === 0 && (
               <div className="py-16 flex flex-col items-center justify-center">
                 <svg
-                  className="mx-auto h-20 w-20 text-gray-400 mb-4"
+                  className="mx-auto mb-4 h-20 w-20 text-muted-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -186,10 +241,10 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                     d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
                   />
                 </svg>
-                <p className="text-gray-600 font-semibold text-lg">
+                <p className="text-lg font-semibold text-foreground">
                   No reviews found
                 </p>
-                <p className="text-gray-500 text-sm mt-2">
+                <p className="mt-2 text-sm text-muted-foreground">
                   This user hasn't posted any reviews yet
                 </p>
               </div>
@@ -197,10 +252,10 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
 
             {!loading && !error && reviews.length > 0 && (
               <div>
-                <div className="mb-6 flex items-center justify-between pb-4 border-b-2 border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                     <svg
-                      className="w-6 h-6 text-blue-600"
+                      className="h-6 w-6 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -214,7 +269,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                     </svg>
                     All Reviews
                   </h3>
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                  <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
                     {reviews.length}
                   </div>
                 </div>
@@ -223,14 +278,12 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                   {reviews.map((review) => (
                     <div
                       key={review.id}
-                      className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-100 
-                               rounded-xl p-5 hover:shadow-xl transition-all duration-200 
-                               hover:scale-[1.02] hover:border-blue-300 flex flex-col"
+                      className="flex flex-col rounded-2xl border border-border bg-background p-5 transition hover:border-primary/40 hover:shadow-sm"
                     >
-                      <div className="flex items-start gap-3 mb-4 pb-3 border-b border-blue-200">
+                      <div className="mb-4 flex items-start gap-3 border-b border-border pb-3">
                         <div className="flex-shrink-0">
                           <svg
-                            className="w-10 h-10 text-blue-600"
+                            className="h-10 w-10 text-primary"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -244,10 +297,10 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                           </svg>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-base font-bold text-gray-900 truncate mb-1">
+                          <div className="mb-1 truncate text-base font-semibold text-foreground">
                             {review.bookName ?? "Unknown book"}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span className="font-medium">
                               {review.username ?? "Anonymous"}
                             </span>
@@ -261,7 +314,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                         </div>
                       </div>
 
-                      <div className="flex-1 bg-white p-4 rounded-lg mb-4 shadow-sm">
+                      <div className="mb-4 flex-1 rounded-xl border border-border bg-card p-4">
                         <ReviewItem review={review} />
                       </div>
 
@@ -269,16 +322,14 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                         onClick={() =>
                           router.push(
                             `/bookDetails/${encodeURIComponent(
-                              review.bookId ?? ""
-                            )}`
+                              review.bookId ?? "",
+                            )}`,
                           )
                         }
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 
-                                 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 
-                                 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary px-4 py-2.5 font-semibold text-primary-foreground transition hover:bg-primary/90"
                       >
                         <svg
-                          className="w-4 h-4"
+                          className="h-4 w-4"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"

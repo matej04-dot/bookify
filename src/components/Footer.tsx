@@ -4,14 +4,14 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-r from-blue-50 via-white to-blue-50 border-t border-gray-200 shadow-sm mt-auto">
+    <footer className="mt-auto border-t border-slate-200 bg-white/90 backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-3">
-              <span className="font-bold text-blue-700 text-2xl">
-                📚 bookify
+              <span className="font-bold text-blue-700 text-2xl tracking-tight">
+                bookify
               </span>
             </div>
             <p className="text-gray-600 text-sm mb-4 max-w-md">
@@ -169,8 +169,7 @@ export default function Footer() {
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} bookify. All rights reserved. Built
-              with ❤️ using Next.js
+              © {new Date().getFullYear()} bookify. All rights reserved.
             </p>
             <p className="text-sm text-gray-500">
               Data provided by{" "}
