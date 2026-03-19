@@ -1,13 +1,13 @@
 "use client";
 import { Rating, RatingButton } from "@/components/ui/rating";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
-  value?: number; 
-  onChange?: (value: number) => void; 
+  value?: number;
+  onChange?: (value: number) => void;
   className?: string;
-  readOnly?: boolean; 
+  readOnly?: boolean;
 }
 
 const StarRating = ({
@@ -17,6 +17,13 @@ const StarRating = ({
   readOnly = false,
 }: StarRatingProps) => {
   const [internalValue, setInternalValue] = useState(value);
+
+  // Sync internal value sa prop value kad se promijeni
+  useEffect(() => {
+    if (readOnly) {
+      setInternalValue(value);
+    }
+  }, [value, readOnly]);
 
   const displayValue = readOnly ? value : Math.round(internalValue);
 

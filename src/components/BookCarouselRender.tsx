@@ -1,4 +1,6 @@
-import BookCardaMedium from "./BookCardMedium";
+"use client";
+
+import BookCardMedium from "./BookCardMedium";
 import {
   Carousel,
   CarouselContent,
@@ -6,17 +8,16 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import type { BookData } from "@/types/Types";
 
 function BookCarouselRender({ data }: { data: BookData | null }) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
-  console.log(data);
   if (!data || !data.works || data.works.length === 0) {
     return (
       <p className="text-center text-gray-900 font-medium mt-5">
-        No books found 123
+        No books found
       </p>
     );
   }
@@ -25,7 +26,7 @@ function BookCarouselRender({ data }: { data: BookData | null }) {
 
   return (
     <div className="my-5">
-      <p className="text-xl font-bold title-case text-gray-900 mb-4 ml-5">
+      <p className="text-xl font-bold title-case text-gray-900 mb-4 ml-5 lg:ml-20">
         {data.name} Books:
       </p>
       <Carousel
@@ -40,13 +41,13 @@ function BookCarouselRender({ data }: { data: BookData | null }) {
               onClick={() => {
                 if (book.key) {
                   const bookKey = book.key.replace("/works/", "");
-                  navigate(`bookDetails/${bookKey}`);
+                  router.push(`bookDetails/${bookKey}`);
                 }
               }}
               key={book.key || index}
               className="pl-4 basis-[40%] sm:basis-[28.57%] lg:basis-[22.22%] xl:basis-[15.38%]"
             >
-              <BookCardaMedium book={book} />
+              <BookCardMedium book={book} />
             </CarouselItem>
           ))}
         </CarouselContent>

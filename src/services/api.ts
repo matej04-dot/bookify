@@ -16,12 +16,9 @@ export function useFetch<T>(url: string, options?: UseFetchOptions) {
         const res = await fetch(url, {
           ...options,
           headers: {
-           
             ...(options?.headers || {}),
           },
-          
         });
-console.log(res)
         if (!res.ok) throw new Error(`Error ${res.status}`);
 
         const json = (await res.json()) as T;
@@ -44,7 +41,7 @@ console.log(res)
     fetchData();
 
     return () => {
-      isCancelled = true; 
+      isCancelled = true;
     };
   }, [url]);
 

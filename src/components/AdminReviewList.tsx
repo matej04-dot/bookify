@@ -1,25 +1,62 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { db } from "../firebase-config";
+import { useRouter } from "next/navigation";
+import { auth, db, subscribeToAuthChanges } from "../firebase-config";
 import {
   collection,
   query,
   where,
   onSnapshot,
+  doc,
+  getDoc,
   type QueryDocumentSnapshot,
   type DocumentData,
 } from "firebase/firestore";
 import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
+import { Spinner } from "./ui/spinner";
 
-function AdminReviewList() {
-  const { userId } = useParams<{ userId: string }>();
-  const navigate = useNavigate();
+interface AdminReviewListProps {
+  userId?: string;
+}
+
+function AdminReviewList({ userId }: AdminReviewListProps) {
+  const router = useRouter();
   const [reviews, setReviews] = useState<(Review & { id: string })[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    const unsub = subscribeToAuthChanges(async (user) => {
+      if (!user?.uid) {
+        setIsAdmin(false);
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const role = userDoc.exists() ? (userDoc.data().role as string) : null;
+        setIsAdmin(role === "admin");
+      } catch {
+        setIsAdmin(false);
+      } finally {
+        setAuthLoading(false);
+      }
+    });
+
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (authLoading || !isAdmin) {
+      setLoading(false);
+      return;
+    }
+
     if (!userId) {
       setError("Missing user id");
       setLoading(false);
@@ -43,121 +80,278 @@ function AdminReviewList() {
           const ta = a.createdAt?.toDate
             ? a.createdAt.toDate().getTime()
             : a.createdAt
-            ? Number(a.createdAt)
-            : 0;
+              ? Number(a.createdAt)
+              : 0;
           const tb = b.createdAt?.toDate
             ? b.createdAt.toDate().getTime()
             : b.createdAt
-            ? Number(b.createdAt)
-            : 0;
+              ? Number(b.createdAt)
+              : 0;
           return tb - ta;
         });
 
         setReviews(arr);
         setLoading(false);
       },
-      (err) => {
-        console.error("AdminReviewList snapshot error:", err);
+      () => {
         setError("Failed to load reviews");
         setLoading(false);
-      }
+      },
     );
 
     return () => unsub();
-  }, [userId]);
+  }, [userId, authLoading, isAdmin]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Spinner label="Checking permissions..." />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-xl rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
+          <h2 className="mb-2 text-2xl font-semibold text-red-800">
+            Access denied
+          </h2>
+          <p className="mb-5 text-red-700">
+            You do not have admin permissions to access this page.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="inline-flex items-center justify-center rounded-full border border-red-300/60 bg-white px-5 py-2.5 font-semibold text-red-700 transition hover:bg-red-100"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-          <div className="p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="min-h-screen bg-background py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-1 rounded-full bg-primary/70"></div>
               <div>
-                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
-                  User reviews
+                <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
+                  User Reviews
                 </h2>
-                <p className="mt-1 text-sm text-gray-500 break-words">
-                  Reviews for user:{" "}
-                  <span className="font-medium text-gray-700">{userId}</span>
+                <p className="mt-1 break-words text-sm text-muted-foreground">
+                  Managing reviews for:{" "}
+                  <span className="font-mono text-xs font-semibold text-primary">
+                    {userId}
+                  </span>
                 </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="px-3 py-2 rounded-md bg-white border-2 border-blue-300 text-gray-700 hover:bg-gray-50 transition text-sm"
-                  onClick={() => navigate("/adminPanel")}
-                >
-                  Back to Admin Panel
-                </button>
               </div>
             </div>
 
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 font-semibold text-foreground transition hover:bg-muted"
+                onClick={() => router.push("/admin")}
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                Admin
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 font-semibold text-foreground transition hover:border-primary/50 hover:text-primary"
+                onClick={() => router.push("/")}
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Home</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+          <div className="p-6 sm:p-8">
             {loading && (
-              <div className="py-10 flex items-center justify-center">
-                <span className="text-blue-600 animate-pulse">
-                  Loading reviews...
-                </span>
+              <div className="py-16 flex flex-col items-center justify-center">
+                <Spinner size="lg" label="Loading reviews..." />
               </div>
             )}
 
             {error && (
-              <div className="mb-4 rounded-lg bg-red-50 border border-red-100 p-4 text-red-700">
-                {error}
+              <div className="mb-6 rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
+                <svg
+                  className="mx-auto h-12 w-12 text-red-600 mb-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p className="font-semibold text-red-700">{error}</p>
               </div>
             )}
 
             {!loading && !error && reviews.length === 0 && (
-              <div className="py-12 flex items-center justify-center">
-                <span className="text-gray-400">No reviews for this user.</span>
+              <div className="py-16 flex flex-col items-center justify-center">
+                <svg
+                  className="mx-auto mb-4 h-20 w-20 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                  />
+                </svg>
+                <p className="text-lg font-semibold text-foreground">
+                  No reviews found
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  This user hasn't posted any reviews yet
+                </p>
               </div>
             )}
 
-            <div className="mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {reviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="flex flex-col h-full bg-blue-100 border border-gray-100 rounded-lg p-4 hover:shadow-lg transition"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="min-w-0 flex-1 ml-1.5">
-                        <div className="text-sm font-semibold text-gray-900 truncate">
-                          {review.bookName ?? "Unknown book"}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500 truncate">
-                          {review.username ?? "Anonymous"} ·{" "}
-                          <span>
-                            {review.createdAt?.toDate
-                              ? review.createdAt.toDate().toLocaleDateString()
-                              : ""}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 text-sm text-gray-700 flex-1 bg-gray-50 p-3 rounded-lg">
-                      <ReviewItem review={review} />
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            (window.location.href = `/bookDetails/${encodeURIComponent(
-                              review.bookId ?? ""
-                            )}`)
-                          }
-                          className="text-xs text-gray-700 font-semibold px-3 py-2 rounded-md bg-blue-400 border border-blue-300 hover:bg-blue-500 transition"
-                        >
-                          View book
-                        </button>
-                      </div>
-                    </div>
+            {!loading && !error && reviews.length > 0 && (
+              <div>
+                <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                    <svg
+                      className="h-6 w-6 text-primary"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                    All Reviews
+                  </h3>
+                  <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+                    {reviews.length}
                   </div>
-                ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {reviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className="flex flex-col rounded-2xl border border-border bg-background p-5 transition hover:border-primary/40 hover:shadow-sm"
+                    >
+                      <div className="mb-4 flex items-start gap-3 border-b border-border pb-3">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-10 w-10 text-primary"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-1 truncate text-base font-semibold text-foreground">
+                            {review.bookName ?? "Unknown book"}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="font-medium">
+                              {review.username ?? "Anonymous"}
+                            </span>
+                            <span>•</span>
+                            <span>
+                              {review.createdAt?.toDate
+                                ? review.createdAt.toDate().toLocaleDateString()
+                                : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-4 flex-1 rounded-xl border border-border bg-card p-4">
+                        <ReviewItem review={review} />
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/bookDetails/${encodeURIComponent(
+                              review.bookId ?? "",
+                            )}`,
+                          )
+                        }
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary px-4 py-2.5 font-semibold text-primary-foreground transition hover:bg-primary/90"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                        View Book
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

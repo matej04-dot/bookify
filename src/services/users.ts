@@ -25,7 +25,6 @@ export async function saveUser(user: User) {
   const userRef = doc(db, "users", user.uid);
 
   try {
-    console.log("saveUser start:", { uid: user.uid, email: user.email ?? null, projectId: (db as any)?.app?.options?.projectId });
     const snap = await getDoc(userRef);
 
     if (!snap.exists()) {
@@ -33,15 +32,16 @@ export async function saveUser(user: User) {
 
       if (user.email) {
         try {
-          const q = query(collection(db, "users"), where("email", "==", user.email));
+          const q = query(
+            collection(db, "users"),
+            where("email", "==", user.email),
+          );
           const found = await getDocs(q);
           if (!found.empty) {
             const existing = found.docs[0].data();
             if (existing && existing.role) roleToSet = existing.role;
           }
-        } catch (err) {
-          console.warn("saveUser: could not query users by email (ignored):", err);
-        }
+        } catch {}
       }
 
       const data: any = {
@@ -55,9 +55,7 @@ export async function saveUser(user: User) {
 
       try {
         await setDoc(userRef, data, { merge: true });
-        console.log("User doc created");
       } catch (err) {
-        console.error("saveUser setDoc failed:", err);
         throw err;
       }
       return;
@@ -70,9 +68,7 @@ export async function saveUser(user: User) {
       lastLogin: serverTimestamp(),
     };
     await setDoc(userRef, data, { merge: true });
-    console.log("User doc updated");
   } catch (err: any) {
-    console.error("saveUser ERROR:", err?.code ?? err?.name ?? err, err?.message ?? err);
     throw err;
   }
 }

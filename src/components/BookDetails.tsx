@@ -1,200 +1,206 @@
-import { useParams } from "react-router-dom";
-import { useFetch } from "../services/api";
-import { useEffect, useState } from "react";
-import authorsData from "../services/fetchAuthors";
 import type { AuthorDetailsProps } from "@/types/Types";
-import { baseUrl, imagesBaseUrl } from "@/utils/Constants";
-import ReviewComponent from "./ReviewComponent";
-import StarRating from "./Rating";
-import { getAuth } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase-config";
+import { imagesBaseUrl } from "@/utils/Constants";
 import ReviewsList from "./ReviewsList";
+import BookDetailsClient from "./BookDetailsClient";
+import BookRating from "./BookRating";
+import Image from "next/image";
 
 type BookDetailsProps = {
-  covers?: number[];
-  title?: string;
-  description?: string | { value: string };
-  authors?: {
-    author: {
-      key: string;
-    };
-  }[];
+  bookKey: string;
+  bookData: {
+    covers?: number[];
+    title?: string;
+    description?: string | { value: string };
+    authors?: { author: { key: string } }[];
+  } | null;
+  authors: AuthorDetailsProps[];
 };
 
-function BookDetails() {
-  const { bookKey } = useParams<{ bookKey: string }>();
-  const [loading, setLoading] = useState(true);
-  const [authors, setAuthors] = useState<AuthorDetailsProps[]>([]);
-  const [loadingAuthors, setLoadingAuthors] = useState(true);
-  const [showReviewModal, setShowReviewModal] = useState(false);
+export default function BookDetails({
+  bookKey,
+  bookData,
+  authors,
+}: BookDetailsProps) {
+  const coverId = bookData?.covers?.[0];
+  const bookCover = coverId
+    ? `${imagesBaseUrl}/b/id/${coverId}-M.jpg`
+    : undefined;
 
-  const {
-    data: bookData,
-    loading: loadingBook,
-    error: errorBook,
-  } = useFetch<BookDetailsProps>(`${baseUrl}/works/${bookKey}.json`);
-
-  const [average, setAverage] = useState<number | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    const fetchAvg = async () => {
-      if (!bookKey) {
-        if (mounted) setAverage(null);
-        return;
-      }
-      try {
-        const ref = doc(db, "bookAvgRating", bookKey);
-        const snap = await getDoc(ref);
-        if (!mounted) return;
-        if (!snap.exists()) {
-          setAverage(null);
-        } else {
-          const data: any = snap.data();
-          const total = Number(data.total ?? 0);
-          const count = Number(data.count ?? 0);
-          const avg = count > 0 ? Math.round((total / count) * 10) / 10 : 0;
-          setAverage(avg);
-        }
-      } catch (err) {
-        console.error("Failed to fetch average rating:", err);
-        if (mounted) setAverage(null);
-      }
-    };
-    fetchAvg();
-    return () => {
-      mounted = false;
-    };
-  }, [bookKey]);
-
-  useEffect(() => {
-    async function fetchAuthors() {
-      if (!bookData?.authors) return;
-
-      const authorKeys = bookData.authors.map((a) => a.author.key);
-      try {
-        const authorData = await authorsData(authorKeys);
-        setAuthors(authorData);
-      } catch (err) {
-        console.error("Error fetching authors:", err);
-      } finally {
-        setLoadingAuthors(false);
-      }
-    }
-
-    fetchAuthors();
-  }, [bookData]);
-
-  console.log(bookData);
-  console.log(authors[0]);
-
-  const coverId = bookData?.covers?.[0] ?? null;
-  const bookCover = `${imagesBaseUrl}/b/id/${coverId}-M.jpg`;
-
-  if (loadingBook)
+  if (!bookData)
     return (
-      <div className="h-64 flex items-center justify-center">
-        <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="px-4 py-10 text-center text-muted-foreground">
+        No book data found
       </div>
     );
-  if (errorBook) return <div>Error loading book details</div>;
-  if (!bookData) return <div>No book data found</div>;
-
-  console.log(authors[0]);
 
   return (
     <>
-      <div className="md:flex sm:w-full items-center justify-center md:mt-10 p-5 lg:w-4/5 lg:mx-auto">
-        <div className="sm:w-1/2 md:w-1/3 flex items-center justify-center border-2 border-yellow-400 bg-gray-200 rounded-lg shadow-lg relative p-3">
-          {loading && (
-            <div className="h-64 flex items-center justify-center">
-              <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-          <img
-            src={bookCover}
-            className={`h-full object-cover ${loading ? "hidden" : "block"}`}
-            onLoad={() => setLoading(false)}
-            onError={() => setLoading(false)}
-          ></img>
-        </div>
-        <div className="md:w-3/4 md:pl-6 mt-3">
-          <div className="mb-3">
-            <p className="text-3xl">{bookData.title}</p>
-            <p className="text-lg text-gray-600 italic mb-1 line-clamp-1">
-              by{" "}
-              {loadingAuthors
-                ? "Loading authors..."
-                : authors.map((author) => author.name).join(", ") ||
-                  "Unknown Author"}
-            </p>
-            <StarRating value={average ?? 0} readOnly />
-          </div>
-          {<hr></hr>}
-          <p className="mt-2 border border-gray-200 rounded-lg p-3 text-gray-700">
-            {typeof bookData.description === "string"
-              ? bookData.description
-              : bookData.description?.value}
-          </p>
-        </div>
-      </div>
-      {<hr></hr>}
-      {authors[0] && (
-        <div className="items-center justify-center m-5 lg:w-4/5 lg:mx-auto">
-          <p className="text-lg text-gray-600 italic mb-1 ml-2">
-            About the author
-          </p>
-          <div className="md:flex border border-gray-100 rounded-lg p-3 bg-gray-200">
-            <div className="md:w-1/4">
-              {authors[0].photos?.[0] && (
-                <img
-                  src={`${imagesBaseUrl}/b/id/${authors[0].photos[0]}-M.jpg`}
-                  className="rounded-lg shadow-lg w-auto"
-                ></img>
-              )}
-              <div className="m-2 text-sm italic">
-                <p>{authors[0].name}</p>
-                <p>Birth date: {authors[0].birth_date}</p>
-                {authors[0]?.death_date && (
-                  <p>Death date: {authors[0].death_date}</p>
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex-shrink-0 flex justify-center md:justify-start">
+            <div className="w-48 md:w-56">
+              <div className="rounded-2xl border border-border bg-card p-3 shadow-sm transition hover:shadow-md">
+                {bookCover ? (
+                  <Image
+                    src={bookCover}
+                    width={200}
+                    height={300}
+                    className="w-full h-auto object-cover rounded-lg aspect-[2/3]"
+                    alt={bookData.title || "Book cover"}
+                    priority
+                  />
+                ) : (
+                  <div className="flex aspect-[2/3] w-full flex-col items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <svg
+                      className="w-12 h-12 mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    <span className="text-sm">No cover</span>
+                  </div>
                 )}
               </div>
             </div>
-            <p className="bg-gray-50 text-gray-700 sm:mt-5 md:mt-0 md:ml-3 p-3 md:w-3/4 rounded-lg break-words">
-              {typeof authors[0].bio === "string"
-                ? authors[0].bio
-                : authors[0].bio?.value}
-            </p>
+          </div>
+
+          <div className="flex-1 space-y-5">
+            <h1 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl lg:text-4xl">
+              {bookData.title}
+            </h1>
+
+            <div className="flex items-center gap-2 text-base text-muted-foreground">
+              <svg
+                className="h-5 w-5 flex-shrink-0 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <span className="font-medium">
+                {authors.length > 0
+                  ? authors.map((author) => author.name).join(", ")
+                  : "Unknown Author"}
+              </span>
+            </div>
+
+            <BookRating bookKey={bookKey} />
+
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold text-foreground">
+                <svg
+                  className="h-5 w-5 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                About this book
+              </h2>
+              <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                {typeof bookData.description === "string"
+                  ? bookData.description
+                  : bookData.description?.value || "No description available."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {authors[0] && (
+        <div className="container mx-auto mt-10 max-w-6xl px-4">
+          <h2 className="mb-4 flex items-center gap-3 text-xl font-semibold text-foreground sm:text-2xl">
+            <div className="h-6 w-1 rounded-full bg-primary/70"></div>
+            About the Author
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-5 p-5 sm:p-6">
+              <div className="flex-shrink-0 flex flex-col items-center sm:items-start">
+                {authors[0].photos?.[0] ? (
+                  <div className="w-24 sm:w-28">
+                    <img
+                      src={`${imagesBaseUrl}/b/id/${authors[0].photos[0]}-M.jpg`}
+                      className="h-auto w-full rounded-lg border border-border"
+                      alt={authors[0].name}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex aspect-square w-24 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:w-28">
+                    <svg
+                      className="w-10 h-10"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </div>
+                )}
+                <div className="mt-3 text-center sm:text-left">
+                  <p className="text-base font-semibold text-foreground">
+                    {authors[0].name}
+                  </p>
+                  {authors[0].birth_date && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Born: {authors[0].birth_date}
+                    </p>
+                  )}
+                  {authors[0]?.death_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Died: {authors[0].death_date}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="h-full rounded-xl border border-border bg-muted/30 p-4">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {typeof authors[0].bio === "string"
+                      ? authors[0].bio
+                      : authors[0].bio?.value || "No biography available."}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
-      {<hr></hr>}
-      <div className="m-5 lg:w-4/5 lg:mx-auto">
-        <button
-          className="rounded-lg mb-3 p-2.5 text-gray-800 font-semibold bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg border border-yellow-400"
-          onClick={() => {
-            const auth = getAuth();
-            const isAuthenticated = !!auth.currentUser;
-            if (isAuthenticated) {
-              setShowReviewModal(true);
-            } else {
-              alert("You must be logged in or registered to leave a review.");
-            }
-          }}
-        >
-          Make Review
-        </button>
-        {showReviewModal && (
-          <ReviewComponent
-            onClose={() => setShowReviewModal(false)}
-            bookName={bookData.title}
-          />
-        )}
-        <ReviewsList bookId={bookKey} />
+
+      <div className="container mx-auto mt-10 mb-10 max-w-6xl px-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="flex items-center gap-3 text-xl font-semibold text-foreground sm:text-2xl">
+            <div className="h-6 w-1 rounded-full bg-primary/70"></div>
+            Reviews
+          </h2>
+        </div>
+        <BookDetailsClient bookKey={bookKey} bookName={bookData.title} />
+        <ReviewsList bookId={bookKey.replace(/^\/?works\//i, "")} />
       </div>
     </>
   );
 }
-
-export default BookDetails;

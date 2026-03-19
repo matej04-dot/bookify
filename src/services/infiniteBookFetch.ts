@@ -3,7 +3,7 @@ import { fetchData, type PageParam } from './fetchBooks';
 import { PAGE_SIZE } from '@/utils/Constants';
 
 export interface Book {
-  id: number;
+  id: string;
   key: string;
   title: string;
   authors?: { name: string }[];
@@ -17,6 +17,28 @@ export interface ProjectsPage {
 
 const projectsInfiniteQueryKey = (url: string) => ['projects', 'infinite', url] as const;
 
+type OpenLibraryDoc = {
+  key?: string;
+  title?: string;
+  author_name?: string[];
+  cover_edition_key?: string;
+};
+
+type OpenLibraryResponse = {
+  docs?: OpenLibraryDoc[];
+  numFound?: number;
+};
+
+const normalizeSearchResponse = (response: OpenLibraryResponse) => {
+  const docs = Array.isArray(response.docs) ? response.docs : [];
+  const numFound =
+    typeof response.numFound === 'number' && response.numFound >= 0
+      ? response.numFound
+      : docs.length;
+
+  return { docs, numFound };
+};
+
 
 const fetchProjectsInfinite = (baseUrl: string) => async ({
   pageParam = 0,
@@ -24,25 +46,31 @@ const fetchProjectsInfinite = (baseUrl: string) => async ({
   const separator = baseUrl.includes('?') ? '&' : '?';
   const url = `${baseUrl}${separator}limit=${PAGE_SIZE}&offset=${pageParam}`;
 
-  const response = await fetchData<{
-    docs: Array<{
-      key: string;
-      title: string;
-      author_name?: string[];
-      cover_edition_key?: string;
-    }>;
-    numFound: number;
-  }>(url);
+  const response = await fetchData<OpenLibraryResponse>(url, undefined, {
+    timeoutMs: 8000,
+    retries: 2,
+    cacheTime: 1800,
+  });
 
-  const books: Book[] = response.docs.map((doc, index) => ({
-    id: pageParam + index,
-    key: doc.key, 
-    title: doc.title,
-    authors: doc.author_name ? doc.author_name.map(name => ({ name })) : undefined,
-    cover_edition_key: doc.cover_edition_key,
-  }));
+  const normalized = normalizeSearchResponse(response);
 
-  const nextCursor = pageParam + PAGE_SIZE < response.numFound ? pageParam + PAGE_SIZE : undefined;
+  const books: Book[] = normalized.docs
+    .filter((doc) => typeof doc.key === 'string' && typeof doc.title === 'string')
+    .map((doc, index) => ({
+      id: `${doc.key}-${pageParam + index}`,
+      key: doc.key as string,
+      title: doc.title as string,
+      authors: Array.isArray(doc.author_name)
+        ? doc.author_name.map((name) => ({ name }))
+        : undefined,
+      cover_edition_key:
+        typeof doc.cover_edition_key === 'string' ? doc.cover_edition_key : undefined,
+    }));
+
+  const nextCursor =
+    pageParam + PAGE_SIZE < normalized.numFound
+      ? pageParam + PAGE_SIZE
+      : undefined;
 
   return {
     data: books,
@@ -50,7 +78,7 @@ const fetchProjectsInfinite = (baseUrl: string) => async ({
   };
 };
 
-export const useProjectsInfinite = (url: string) => {
+export const useProjectsInfinite = (url: string, enabled: boolean = true) => {
   return useInfiniteQuery<
     ProjectsPage,                 
     Error,
@@ -60,6 +88,7 @@ export const useProjectsInfinite = (url: string) => {
   >({
     queryKey: projectsInfiniteQueryKey(url),
     queryFn: fetchProjectsInfinite(url),
+    enabled,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });

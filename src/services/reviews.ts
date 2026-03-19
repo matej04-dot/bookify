@@ -11,12 +11,16 @@ import {
 import type { Review } from "../types/Types";
 
 export async function addReview(review: Review) {
-  if (!review || !review.userId) throw new Error("Invalid review payload: missing userId");
-  if (!review.bookId) throw new Error("Invalid review payload: missing bookId (set from URL before calling)");
+  if (!review || !review.userId)
+    throw new Error("Invalid review payload: missing userId");
+  if (!review.bookId)
+    throw new Error(
+      "Invalid review payload: missing bookId (set from URL before calling)",
+    );
 
   const colRef = collection(db, "reviews");
 
-  const newDocRef = doc(colRef); 
+  const newDocRef = doc(colRef);
   const aggRef = doc(db, "bookAvgRating", review.bookId);
 
   try {
@@ -57,7 +61,6 @@ export async function addReview(review: Review) {
 
     return { id: newDocRef.id, updated: false };
   } catch (err) {
-    console.error("addReview (create) transaction failed:", err);
     throw err;
   }
 }
@@ -71,7 +74,11 @@ export async function getUserReviews(userId: string) {
 
 export async function updateReview(
   reviewId: string,
-  params: { rating?: number; comment?: string | null; username?: string | null }
+  params: {
+    rating?: number;
+    comment?: string | null;
+    username?: string | null;
+  },
 ) {
   if (!reviewId) throw new Error("Missing reviewId");
 
@@ -84,14 +91,16 @@ export async function updateReview(
 
       const reviewData: any = reviewSnap.data();
       const oldRating = Number(reviewData.rating ?? 0);
-      const hasNewRating = typeof params.rating === "number" && !isNaN(params.rating);
+      const hasNewRating =
+        typeof params.rating === "number" && !isNaN(params.rating);
       const newRating = hasNewRating ? Number(params.rating) : oldRating;
 
       const updatePayload: any = {
         updatedAt: serverTimestamp(),
       };
       if ("comment" in params) updatePayload.comment = params.comment ?? null;
-      if ("username" in params) updatePayload.username = params.username ?? reviewData.username ?? null;
+      if ("username" in params)
+        updatePayload.username = params.username ?? reviewData.username ?? null;
       if (hasNewRating) updatePayload.rating = newRating;
 
       const bookId = reviewData.bookId;
@@ -125,7 +134,6 @@ export async function updateReview(
 
     return { updated: true };
   } catch (err) {
-    console.error("updateReview transaction failed:", err);
     throw err;
   }
 }
