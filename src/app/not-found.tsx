@@ -1,7 +1,4 @@
 import Link from "next/link";
-
-// Mark as dynamic to skip prerendering and avoid useSearchParams() warnings
-// The page will render dynamically when actually accessed
 export const dynamic = "force-dynamic";
 
 export default function NotFound() {
