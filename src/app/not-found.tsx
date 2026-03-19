@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// Mark as dynamic to skip prerendering and avoid useSearchParams() warnings
+// The page will render dynamically when actually accessed
+export const dynamic = "force-dynamic";
+
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
