@@ -34,8 +34,7 @@ export default function AccountDetails() {
         reviewsUnsubRef.current = null;
       }
       await signOut(auth);
-    } catch (err) {
-      console.error("Logout failed:", err);
+    } catch {
       setError("Logout failed");
     } finally {
       router.push("/");
@@ -82,9 +81,7 @@ export default function AccountDetails() {
 
         setUserReviews(arr);
       },
-      (err) => {
-        console.error("User reviews snapshot error:", err);
-      },
+      () => {},
     );
 
     return () => {
@@ -118,8 +115,7 @@ export default function AccountDetails() {
               setProfile(snap.exists() ? snap.data() : null);
               setLoading(false);
             },
-            (err) => {
-              console.error("AccountDetails snapshot error:", err);
+            () => {
               setError("Failed to load profile");
               setLoading(false);
             },
@@ -128,8 +124,7 @@ export default function AccountDetails() {
           setLoading(false);
         }
       },
-      (err) => {
-        console.error("Auth state error:", err);
+      () => {
         setError("Auth error");
         setLoading(false);
       },

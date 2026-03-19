@@ -20,13 +20,7 @@ const AuthListener = () => {
         };
 
         await saveUser(payload);
-      } catch (e: any) {
-        console.error(
-          "AuthListener sync failed:",
-          e?.code ?? e?.name ?? e,
-          e?.message ?? e,
-        );
-      }
+      } catch {}
     });
 
     return () => unsub();

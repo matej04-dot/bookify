@@ -15,7 +15,7 @@ export async function addReview(review: Review) {
     throw new Error("Invalid review payload: missing userId");
   if (!review.bookId)
     throw new Error(
-      "Invalid review payload: missing bookId (set from URL before calling)"
+      "Invalid review payload: missing bookId (set from URL before calling)",
     );
 
   const colRef = collection(db, "reviews");
@@ -61,7 +61,6 @@ export async function addReview(review: Review) {
 
     return { id: newDocRef.id, updated: false };
   } catch (err) {
-    console.error("addReview (create) transaction failed:", err);
     throw err;
   }
 }
@@ -75,7 +74,11 @@ export async function getUserReviews(userId: string) {
 
 export async function updateReview(
   reviewId: string,
-  params: { rating?: number; comment?: string | null; username?: string | null }
+  params: {
+    rating?: number;
+    comment?: string | null;
+    username?: string | null;
+  },
 ) {
   if (!reviewId) throw new Error("Missing reviewId");
 
@@ -131,7 +134,6 @@ export async function updateReview(
 
     return { updated: true };
   } catch (err) {
-    console.error("updateReview transaction failed:", err);
     throw err;
   }
 }

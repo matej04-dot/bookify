@@ -94,8 +94,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
         setReviews(arr);
         setLoading(false);
       },
-      (err) => {
-        console.error("AdminReviewList snapshot error:", err);
+      () => {
         setError("Failed to load reviews");
         setLoading(false);
       },

@@ -49,8 +49,7 @@ export function useBookAverageRating(
 
         setAverage(avg);
         setReviewCount(count);
-      } catch (err) {
-        console.error("Failed to fetch bookAvgRating:", err);
+      } catch {
         if (mounted) {
           setAverage(null);
           setReviewCount(null);

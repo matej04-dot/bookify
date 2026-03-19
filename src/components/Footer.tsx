@@ -88,14 +88,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/search"
-                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm"
-                >
-                  Search Books
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/account"
                   className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm"
                 >

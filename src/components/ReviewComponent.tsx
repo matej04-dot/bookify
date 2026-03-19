@@ -60,7 +60,6 @@ export default function ReviewComponent({
       setComment("");
       onClose?.();
     } catch (err: any) {
-      console.error("addReview failed:", err);
       setError(err?.message || "Failed to submit review");
     } finally {
       setLoading(false);

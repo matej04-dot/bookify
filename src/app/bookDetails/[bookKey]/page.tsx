@@ -16,7 +16,7 @@ type BookData = {
 
 async function fetchBookData(
   bookKey: string,
-  retries = 3
+  retries = 3,
 ): Promise<BookData | null> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
@@ -33,26 +33,19 @@ async function fetchBookData(
 
       // If it's a 503 or 429, retry after delay
       if (res.status === 503 || res.status === 429) {
-        console.warn(
-          `API temporarily unavailable (${res.status}), attempt ${
-            attempt + 1
-          }/${retries}`
-        );
         if (attempt < retries - 1) {
           await new Promise((resolve) =>
-            setTimeout(resolve, 1000 * (attempt + 1))
+            setTimeout(resolve, 1000 * (attempt + 1)),
           );
           continue;
         }
       }
 
-      console.error("Fetch error:", res.status, res.statusText);
       return null;
-    } catch (err) {
-      console.error(`Fetch failed (attempt ${attempt + 1}/${retries}):`, err);
+    } catch {
       if (attempt < retries - 1) {
         await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (attempt + 1))
+          setTimeout(resolve, 1000 * (attempt + 1)),
         );
       }
     }
@@ -78,9 +71,7 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
     const authorKeys = bookData.authors.map((a) => a.author.key);
     try {
       authors = await authorsData(authorKeys);
-    } catch (err) {
-      console.error("Authors fetch failed:", err);
-    }
+    } catch {}
   }
 
   return (

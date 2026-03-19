@@ -46,8 +46,7 @@ function AdminPanel() {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const role = userDoc.exists() ? (userDoc.data().role as string) : null;
         setIsAdmin(role === "admin");
-      } catch (err) {
-        console.error("Failed to verify admin role:", err);
+      } catch {
         setIsAdmin(false);
       } finally {
         setAuthLoading(false);
@@ -84,11 +83,10 @@ function AdminPanel() {
         setUsers(arr);
         setLoading(false);
       },
-      (err) => {
-        console.error("AdminPanel users snapshot failed:", err);
+      () => {
         setError("Failed to load users");
         setLoading(false);
-      }
+      },
     );
 
     return () => unsub();
@@ -117,7 +115,7 @@ function AdminPanel() {
           headers: {
             Authorization: `Bearer ${idToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -126,11 +124,10 @@ function AdminPanel() {
       }
 
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, role: "admin" } : u))
+        prev.map((u) => (u.id === userId ? { ...u, role: "admin" } : u)),
       );
-    } catch (err) {
-      console.error("Failed to promote user:", err);
-      alert("Failed to promote user. Check console for details.");
+    } catch {
+      alert("Failed to promote user.");
     } finally {
       setPromotingUserId(null);
     }
@@ -154,7 +151,9 @@ function AdminPanel() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-xl rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
-          <h2 className="mb-2 text-2xl font-semibold text-red-800">Access denied</h2>
+          <h2 className="mb-2 text-2xl font-semibold text-red-800">
+            Access denied
+          </h2>
           <p className="mb-5 text-red-700">
             You do not have admin permissions to access this page.
           </p>
@@ -260,7 +259,9 @@ function AdminPanel() {
                       d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                     />
                   </svg>
-                  <p className="font-medium text-muted-foreground">No users found</p>
+                  <p className="font-medium text-muted-foreground">
+                    No users found
+                  </p>
                 </div>
               )}
               {users.map((u) => (
@@ -272,7 +273,7 @@ function AdminPanel() {
                     <div className="flex items-center gap-3">
                       {(() => {
                         const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          u.displayName ?? u.email ?? "User"
+                          u.displayName ?? u.email ?? "User",
                         )}&background=FFFFFF&color=2563EB&size=128`;
                         return (
                           <img
@@ -346,13 +347,15 @@ function AdminPanel() {
                       <button
                         className="flex-1 rounded-lg border border-primary/20 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={() => promoteToAdmin(u.id)}
-                        disabled={promotingUserId === u.id || u.role === "admin"}
+                        disabled={
+                          promotingUserId === u.id || u.role === "admin"
+                        }
                       >
                         {u.role === "admin"
                           ? "Admin"
                           : promotingUserId === u.id
-                          ? "Promoting..."
-                          : "Promote"}
+                            ? "Promoting..."
+                            : "Promote"}
                       </button>
                     </div>
                   </div>
@@ -414,7 +417,7 @@ function AdminPanel() {
                         <div className="flex items-center gap-3">
                           {(() => {
                             const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                              u.displayName ?? u.email ?? "User"
+                              u.displayName ?? u.email ?? "User",
                             )}&background=eff6ff&color=2563eb&size=64`;
                             return (
                               <img
@@ -464,13 +467,15 @@ function AdminPanel() {
                           <button
                             className="rounded-lg border border-primary/20 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                             onClick={() => promoteToAdmin(u.id)}
-                            disabled={promotingUserId === u.id || u.role === "admin"}
+                            disabled={
+                              promotingUserId === u.id || u.role === "admin"
+                            }
                           >
                             {u.role === "admin"
                               ? "Admin"
                               : promotingUserId === u.id
-                              ? "Promoting..."
-                              : "Promote"}
+                                ? "Promoting..."
+                                : "Promote"}
                           </button>
                         </div>
                       </td>

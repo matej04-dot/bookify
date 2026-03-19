@@ -10,20 +10,32 @@ import OrderBy from "./OrderBy";
 import { Spinner } from "./ui/spinner";
 import { EmptyState } from "./ui/empty-state";
 
+type SearchBy = "title" | "author";
+
+const getValidSearchBy = (value: string | null): SearchBy => {
+  if (value === "author") return "author";
+  return "title";
+};
+
+const searchByLabel: Record<SearchBy, string> = {
+  title: "Book Title",
+  author: "Author",
+};
+
 const ProjectsListInfinite: React.FC = () => {
   const searchParams = useSearchParams();
   const query = (searchParams.get("q") || "").trim();
+  const searchBy = getValidSearchBy(searchParams.get("by"));
   const hasValidQuery = query.length >= 2;
 
   const [order, setOrder] = useState<string>("relevance");
 
   const projectsUrl = useMemo(() => {
     const params = new URLSearchParams();
-    params.set("q", query ?? "");
-    params.set("mode", "everything");
+    params.set(searchBy, query ?? "");
     if (order && order !== "relevance") params.set("sort", order);
     return `${baseUrl}/search.json?${params.toString()}`;
-  }, [query, order]);
+  }, [query, order, searchBy]);
 
   const {
     data,
@@ -137,7 +149,7 @@ const ProjectsListInfinite: React.FC = () => {
             {query && (
               <span className="text-gray-500 font-normal">
                 {" "}
-                for &quot;{query}&quot;
+                for &quot;{query}&quot; in {searchByLabel[searchBy]}
               </span>
             )}
           </h1>

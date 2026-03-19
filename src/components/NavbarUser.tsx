@@ -22,8 +22,7 @@ const NavbarUser: React.FC = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-    } catch (err) {
-      console.error("Logout failed:", err);
+    } catch {
     } finally {
       setShowMenu(false);
       router.replace("/");
@@ -37,7 +36,7 @@ const NavbarUser: React.FC = () => {
   if (!user) return null;
 
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    user.displayName || user.email || "User"
+    user.displayName || user.email || "User",
   )}&background=2563eb&color=ffffff&bold=true`;
 
   return (

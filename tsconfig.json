@@ -19,7 +19,6 @@
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
-    "types": ["jest", "@testing-library/jest-dom"],
     "plugins": [
       {
         "name": "next"

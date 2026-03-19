@@ -12,7 +12,11 @@ export async function GET(request: Request) {
       .replace(/^\/?works\//i, "")
       .trim();
 
-    if (!normalized || normalized.length > 128 || /[^a-zA-Z0-9_-]/.test(normalized)) {
+    if (
+      !normalized ||
+      normalized.length > 128 ||
+      /[^a-zA-Z0-9_-]/.test(normalized)
+    ) {
       return NextResponse.json({ error: "Invalid book id" }, { status: 400 });
     }
 
@@ -31,10 +35,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("API Error:", error?.message || error);
     return NextResponse.json(
       { error: error?.message || "Failed to fetch reviews" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

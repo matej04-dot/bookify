@@ -47,18 +47,11 @@ const Login: React.FC = () => {
             email: res.user.email ?? null,
             displayName: res.user.displayName ?? null,
           });
-        } catch (e) {
-          console.warn("saveUser after Google sign-in failed (ignored):", e);
-        }
+        } catch {}
       }
 
       router.replace(safeRedirectPath);
     } catch (err: any) {
-      console.error(
-        "Auth error:",
-        err?.code ?? err?.name ?? err,
-        err?.message ?? err,
-      );
       setError(err.message ?? String(err));
     } finally {
       setLoading(false);
@@ -91,11 +84,6 @@ const Login: React.FC = () => {
       }
       router.replace(safeRedirectPath);
     } catch (err: any) {
-      console.error(
-        "Auth error:",
-        err?.code ?? err?.name ?? err,
-        err?.message ?? err,
-      );
       setError(err.message ?? String(err));
     } finally {
       setLoading(false);

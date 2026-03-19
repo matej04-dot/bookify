@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-
 type ErrorPageProps = {
   error: Error & { digest?: string };
   reset: () => void;
 };
 
-export default function ErrorPage({ error, reset }: ErrorPageProps) {
-  useEffect(() => {
-    console.error("App route error:", error);
-  }, [error]);
-
+export default function ErrorPage({ reset }: ErrorPageProps) {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 bg-slate-50">
       <div className="w-full max-w-lg rounded-2xl border border-red-200 bg-white p-7 text-center shadow-sm">

@@ -48,8 +48,7 @@ export default function ReviewsList({ bookId }: ReviewListProps) {
         setLoading(false);
         setError(null);
       },
-      (err) => {
-        console.error("ReviewsList error:", err);
+      () => {
         setError("Failed to load reviews");
         setLoading(false);
       },

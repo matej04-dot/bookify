@@ -41,12 +41,7 @@ export async function saveUser(user: User) {
             const existing = found.docs[0].data();
             if (existing && existing.role) roleToSet = existing.role;
           }
-        } catch (err) {
-          console.warn(
-            "saveUser: could not query users by email (ignored):",
-            err,
-          );
-        }
+        } catch {}
       }
 
       const data: any = {
@@ -61,7 +56,6 @@ export async function saveUser(user: User) {
       try {
         await setDoc(userRef, data, { merge: true });
       } catch (err) {
-        console.error("saveUser setDoc failed:", err);
         throw err;
       }
       return;
@@ -75,11 +69,6 @@ export async function saveUser(user: User) {
     };
     await setDoc(userRef, data, { merge: true });
   } catch (err: any) {
-    console.error(
-      "saveUser ERROR:",
-      err?.code ?? err?.name ?? err,
-      err?.message ?? err,
-    );
     throw err;
   }
 }

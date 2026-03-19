@@ -1,20 +1,33 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback, useRef, useEffect } from "react";
 import RecommendedSearch from "./RecommendedSearch";
 import { baseUrl } from "@/utils/Constants";
 
+type SearchBy = "title" | "author";
+
+const getValidSearchBy = (value: string | null): SearchBy => {
+  if (value === "author") return "author";
+  return "title";
+};
+
+const buildOpenLibrarySearchUrl = (query: string, by: SearchBy, limit = 5) => {
+  const params = new URLSearchParams();
+  params.set(by, query);
+  params.set("limit", String(limit));
+  return `${baseUrl}/search.json?${params.toString()}`;
+};
+
 const fetchBookTitles = async (
   query: string,
+  by: SearchBy,
   signal: AbortSignal,
   retries = 2,
 ): Promise<string[]> => {
   if (!query.trim() || query.trim().length < 2) return [];
 
-  const url = `${baseUrl}/search.json?q=${encodeURIComponent(
-    query,
-  )}&mode=everything&limit=5`;
+  const url = buildOpenLibrarySearchUrl(query, by, 5);
 
   for (let attempt = 0; attempt < retries; attempt++) {
     const controller = new AbortController();
@@ -40,14 +53,24 @@ const fetchBookTitles = async (
         if (docs.length === 0) {
           return [];
         }
-        const uniqueTitles = new Set<string>();
+        const uniqueSuggestions = new Set<string>();
         for (const book of docs) {
-          if (typeof book?.title === "string" && book.title.trim()) {
-            uniqueTitles.add(book.title.trim());
+          if (by === "author") {
+            const authorNames = Array.isArray(book?.author_name)
+              ? book.author_name
+              : [];
+            for (const authorName of authorNames) {
+              if (typeof authorName === "string" && authorName.trim()) {
+                uniqueSuggestions.add(authorName.trim());
+              }
+              if (uniqueSuggestions.size >= 5) break;
+            }
+          } else if (typeof book?.title === "string" && book.title.trim()) {
+            uniqueSuggestions.add(book.title.trim());
           }
-          if (uniqueTitles.size >= 5) break;
+          if (uniqueSuggestions.size >= 5) break;
         }
-        return Array.from(uniqueTitles);
+        return Array.from(uniqueSuggestions);
       }
 
       // If it's a server error, retry
@@ -56,9 +79,8 @@ const fetchBookTitles = async (
         continue;
       }
 
-      console.warn(`Search API error: ${res.status}`);
       return [];
-    } catch (error) {
+    } catch {
       if (signal.aborted) {
         return [];
       }
@@ -67,7 +89,6 @@ const fetchBookTitles = async (
         await new Promise((resolve) => setTimeout(resolve, 500));
         continue;
       }
-      console.warn("Search temporarily unavailable");
       return [];
     } finally {
       clearTimeout(timeoutId);
@@ -79,6 +100,11 @@ const fetchBookTitles = async (
 
 export default function Search() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [searchBy, setSearchBy] = useState<SearchBy>(
+    getValidSearchBy(searchParams.get("by")),
+  );
   const [value, setValue] = useState("");
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [recommendVisible, setRecommendVisible] = useState(false);
@@ -87,6 +113,10 @@ export default function Search() {
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activeRequestRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    setSearchBy(getValidSearchBy(searchParams.get("by")));
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -108,6 +138,7 @@ export default function Search() {
 
         const results = await fetchBookTitles(
           newValue.trim(),
+          searchBy,
           controller.signal,
         );
         if (controller.signal.aborted) return;
@@ -132,10 +163,10 @@ export default function Search() {
       setRecommendations([]);
       setRecommendVisible(false);
 
-      const searchKey = `/search?q=${formatted}&mode=everything`;
+      const searchKey = `/search?q=${formatted}&by=${searchBy}`;
       router.push(searchKey);
     },
-    [isNavigating, router],
+    [isNavigating, router, searchBy],
   );
 
   const handleClick = useCallback(() => {
@@ -146,6 +177,40 @@ export default function Search() {
     setValue(rec);
     navigateToSearch(rec);
   };
+
+  useEffect(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    if (value.trim().length < 2) {
+      setRecommendations([]);
+      setRecommendVisible(false);
+      return;
+    }
+
+    debounceTimeoutRef.current = setTimeout(async () => {
+      activeRequestRef.current?.abort();
+      const controller = new AbortController();
+      activeRequestRef.current = controller;
+
+      const results = await fetchBookTitles(
+        value.trim(),
+        searchBy,
+        controller.signal,
+      );
+      if (controller.signal.aborted) return;
+
+      setRecommendations(results);
+      setRecommendVisible(results.length > 0);
+    }, 200);
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [searchBy]);
 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
@@ -169,6 +234,30 @@ export default function Search() {
 
   return (
     <div className="relative w-full" ref={containerRef}>
+      <div className="mb-2 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setSearchBy("title")}
+          className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+            searchBy === "title"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          Book Title
+        </button>
+        <button
+          type="button"
+          onClick={() => setSearchBy("author")}
+          className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+            searchBy === "author"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          Author
+        </button>
+      </div>
       <div className="relative flex items-center rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="absolute left-4 pointer-events-none">
           <svg
@@ -195,7 +284,11 @@ export default function Search() {
             }
           }}
           onChange={handleChange}
-          placeholder="Search for books, authors, or topics..."
+          placeholder={
+            searchBy === "author"
+              ? "Search by author name..."
+              : "Search by book title..."
+          }
           className="w-full rounded-xl bg-transparent py-3 pl-12 pr-24 text-sm text-slate-900 placeholder-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         <button
