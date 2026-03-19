@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { auth } from "../firebase-config";
+import { auth, hasFirebaseClientConfig } from "../firebase-config";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -35,6 +35,12 @@ const Login: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     setError(null);
+    if (!hasFirebaseClientConfig()) {
+      setError(
+        "Authentication is currently unavailable. Missing Firebase client configuration.",
+      );
+      return;
+    }
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -61,6 +67,12 @@ const Login: React.FC = () => {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!hasFirebaseClientConfig()) {
+      setError(
+        "Authentication is currently unavailable. Missing Firebase client configuration.",
+      );
+      return;
+    }
     setLoading(true);
     try {
       if (isRegister) {

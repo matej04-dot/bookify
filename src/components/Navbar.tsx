@@ -3,8 +3,7 @@
 import Search from "./Search";
 import NavbarUser from "./NavbarUser";
 import { useEffect, useState } from "react";
-import { auth } from "../firebase-config";
-import { onAuthStateChanged } from "firebase/auth";
+import { subscribeToAuthChanges } from "../firebase-config";
 import Link from "next/link";
 
 export default function Navbar() {
@@ -13,7 +12,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
+    const unsubscribe = subscribeToAuthChanges((u) => setUser(u));
     return () => unsubscribe();
   }, []);
 

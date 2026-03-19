@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { auth, db } from "../firebase-config";
-import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { auth, db, subscribeToAuthChanges } from "../firebase-config";
+import { signOut, type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
   doc,
@@ -94,41 +94,34 @@ export default function AccountDetails() {
 
   useEffect(() => {
     profileUnsubRef.current = null;
-    const unsubAuth = onAuthStateChanged(
-      auth,
-      (user) => {
-        setAuthUser(user);
-        setProfile(null);
-        setError(null);
-        setLoading(!!user);
+    const unsubAuth = subscribeToAuthChanges((user) => {
+      setAuthUser(user);
+      setProfile(null);
+      setError(null);
+      setLoading(!!user);
 
-        if (profileUnsubRef.current) {
-          profileUnsubRef.current();
-          profileUnsubRef.current = null;
-        }
+      if (profileUnsubRef.current) {
+        profileUnsubRef.current();
+        profileUnsubRef.current = null;
+      }
 
-        if (user) {
-          const ref = doc(db, "users", user.uid);
-          profileUnsubRef.current = onSnapshot(
-            ref,
-            (snap) => {
-              setProfile(snap.exists() ? snap.data() : null);
-              setLoading(false);
-            },
-            () => {
-              setError("Failed to load profile");
-              setLoading(false);
-            },
-          );
-        } else {
-          setLoading(false);
-        }
-      },
-      () => {
-        setError("Auth error");
+      if (user) {
+        const ref = doc(db, "users", user.uid);
+        profileUnsubRef.current = onSnapshot(
+          ref,
+          (snap) => {
+            setProfile(snap.exists() ? snap.data() : null);
+            setLoading(false);
+          },
+          () => {
+            setError("Failed to load profile");
+            setLoading(false);
+          },
+        );
+      } else {
         setLoading(false);
-      },
-    );
+      }
+    });
 
     return () => {
       unsubAuth();

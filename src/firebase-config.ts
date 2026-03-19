@@ -1,10 +1,19 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 let app: any = null;
 let authInstance: any = null;
 let dbInstance: any = null;
+
+const REQUIRED_FIREBASE_CLIENT_FIELDS = [
+  "apiKey",
+  "authDomain",
+  "projectId",
+  "storageBucket",
+  "messagingSenderId",
+  "appId",
+] as const;
 
 function getFirebaseConfig() {
   return {
@@ -12,17 +21,33 @@ function getFirebaseConfig() {
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+    messagingSenderId:
+      process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   };
+}
+
+export function hasFirebaseClientConfig() {
+  const config = getFirebaseConfig();
+
+  return REQUIRED_FIREBASE_CLIENT_FIELDS.every((field) => {
+    const value = config[field];
+    return typeof value === "string" && value.trim().length > 0;
+  });
 }
 
 // Only initialize Firebase on the client side
 function getFirebaseApp() {
   if (typeof window === "undefined") {
     throw new Error(
-      "Firebase cannot be accessed on the server. Ensure you're using 'use client' components."
+      "Firebase cannot be accessed on the server. Ensure you're using 'use client' components.",
+    );
+  }
+
+  if (!hasFirebaseClientConfig()) {
+    throw new Error(
+      "Firebase client configuration is missing or invalid. Set NEXT_PUBLIC_FIREBASE_* environment variables.",
     );
   }
 
@@ -47,6 +72,21 @@ function getFirebaseDb() {
     dbInstance = getFirestore(firebaseApp);
   }
   return dbInstance;
+}
+
+export function subscribeToAuthChanges(callback: (user: User | null) => void) {
+  if (typeof window === "undefined" || !hasFirebaseClientConfig()) {
+    callback(null);
+    return () => {};
+  }
+
+  try {
+    return onAuthStateChanged(getFirebaseAuth(), callback);
+  } catch (error) {
+    console.error("Failed to initialize Firebase auth listener", error);
+    callback(null);
+    return () => {};
+  }
 }
 
 // Lazy getters - will throw if accessed on server

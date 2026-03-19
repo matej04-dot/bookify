@@ -1,13 +1,12 @@
 "use client";
 import { useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/firebase-config";
+import { subscribeToAuthChanges } from "@/firebase-config";
 import { saveUser } from "@/services/users";
 import type { User } from "@/services/users";
 
 const AuthListener = () => {
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const unsub = subscribeToAuthChanges(async (user) => {
       if (!user || !user.uid) {
         return;
       }

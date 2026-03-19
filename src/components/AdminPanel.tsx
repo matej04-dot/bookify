@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth, db } from "../firebase-config";
+import { auth, db, subscribeToAuthChanges } from "../firebase-config";
 import {
   collection,
   query,
@@ -11,7 +11,6 @@ import {
   type QueryDocumentSnapshot,
   type DocumentData,
 } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Spinner } from "./ui/spinner";
 
@@ -35,7 +34,7 @@ function AdminPanel() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const unsub = subscribeToAuthChanges(async (user) => {
       if (!user?.uid) {
         setIsAdmin(false);
         setAuthLoading(false);

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "../firebase-config";
-import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { auth, subscribeToAuthChanges } from "../firebase-config";
+import { signOut, type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 const NavbarUser: React.FC = () => {
@@ -12,7 +12,7 @@ const NavbarUser: React.FC = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = subscribeToAuthChanges((u) => {
       setUser(u);
       setLoading(false);
     });
