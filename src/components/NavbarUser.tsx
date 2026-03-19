@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth, subscribeToAuthChanges } from "../firebase-config";
-import { signOut, type User } from "firebase/auth";
+import { logoutCurrentUser, subscribeToAuthChanges } from "../firebase-config";
+import { type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 const NavbarUser: React.FC = () => {
@@ -21,7 +21,7 @@ const NavbarUser: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logoutCurrentUser();
     } catch {
     } finally {
       setShowMenu(false);

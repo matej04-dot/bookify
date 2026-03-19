@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/firebase-config";
+import { getClientDb } from "@/firebase-config";
 
 type UseBookAverageRatingResult = {
   loading: boolean;
@@ -32,6 +32,7 @@ export function useBookAverageRating(
 
       setLoading(true);
       try {
+        const db = getClientDb();
         const ref = doc(db, "bookAvgRating", normalizedKey);
         const snap = await getDoc(ref);
         if (!mounted) return;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, db, subscribeToAuthChanges } from "../firebase-config";
+import { getClientDb, subscribeToAuthChanges } from "../firebase-config";
 import {
   collection,
   query,
@@ -38,6 +38,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
       }
 
       try {
+        const db = getClientDb();
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const role = userDoc.exists() ? (userDoc.data().role as string) : null;
         setIsAdmin(role === "admin");
@@ -66,6 +67,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
     setLoading(true);
     setError(null);
 
+    const db = getClientDb();
     const q = query(collection(db, "reviews"), where("userId", "==", userId));
 
     const unsub = onSnapshot(
@@ -243,7 +245,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                   No reviews found
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  This user hasn't posted any reviews yet
+                  This user hasn&apos;t posted any reviews yet
                 </p>
               </div>
             )}

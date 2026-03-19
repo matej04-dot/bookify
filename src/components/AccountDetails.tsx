@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { auth, db, subscribeToAuthChanges } from "../firebase-config";
-import { signOut, type User } from "firebase/auth";
+import {
+  getClientDb,
+  logoutCurrentUser,
+  subscribeToAuthChanges,
+} from "../firebase-config";
+import { type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
   doc,
@@ -33,7 +37,7 @@ export default function AccountDetails() {
         reviewsUnsubRef.current();
         reviewsUnsubRef.current = null;
       }
-      await signOut(auth);
+      await logoutCurrentUser();
     } catch {
       setError("Logout failed");
     } finally {
@@ -51,6 +55,8 @@ export default function AccountDetails() {
       setUserReviews([]);
     }
     if (!authUser?.uid) return;
+
+    const db = getClientDb();
 
     const q = query(
       collection(db, "reviews"),
@@ -106,6 +112,7 @@ export default function AccountDetails() {
       }
 
       if (user) {
+        const db = getClientDb();
         const ref = doc(db, "users", user.uid);
         profileUnsubRef.current = onSnapshot(
           ref,

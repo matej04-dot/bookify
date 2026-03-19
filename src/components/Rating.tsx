@@ -1,6 +1,6 @@
 "use client";
 import { Rating, RatingButton } from "@/components/ui/rating";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
@@ -19,7 +19,7 @@ const StarRating = ({
   const [internalValue, setInternalValue] = useState(value);
 
   // Sync internal value sa prop value kad se promijeni
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (readOnly) {
       setInternalValue(value);
     }
@@ -60,7 +60,7 @@ const StarRating = ({
             key={index}
             className="relative w-5 h-5 sm:w-6 sm:h-6 p-0.5"
           />
-        )
+        ),
       )}
     </Rating>
   );

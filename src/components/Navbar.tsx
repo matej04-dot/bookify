@@ -2,13 +2,15 @@
 
 import Search from "./Search";
 import NavbarUser from "./NavbarUser";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { subscribeToAuthChanges } from "../firebase-config";
 import Link from "next/link";
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
-  const [fromPath, setFromPath] = useState<string>("/");
+  const [fromPath, setFromPath] = useState<string>(() =>
+    typeof window !== "undefined" ? window.location.pathname : "/",
+  );
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -18,8 +20,6 @@ export default function Navbar() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setFromPath(window.location.pathname);
-
       const handleScroll = () => {
         setIsScrolled(window.scrollY > 10);
       };

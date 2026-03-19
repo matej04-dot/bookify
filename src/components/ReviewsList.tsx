@@ -8,7 +8,7 @@ import {
   orderBy,
   onSnapshot,
 } from "firebase/firestore";
-import { db } from "../firebase-config";
+import { getClientDb } from "../firebase-config";
 import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
 import { Spinner } from "./ui/spinner";
@@ -30,6 +30,7 @@ export default function ReviewsList({ bookId }: ReviewListProps) {
     }
 
     const normalized = bookId.replace(/^\/?works\//i, "").trim();
+    const db = getClientDb();
 
     const q = query(
       collection(db, "reviews"),

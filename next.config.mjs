@@ -10,9 +10,6 @@ const nextConfig = {
     // Optimized package imports za brže buildovanje
     optimizePackageImports: ["@/components", "@/services"],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [

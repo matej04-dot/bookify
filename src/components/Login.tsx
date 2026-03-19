@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { auth, hasFirebaseClientConfig } from "../firebase-config";
+import Link from "next/link";
+import { getClientAuth, hasFirebaseClientConfig } from "../firebase-config";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -43,6 +44,7 @@ const Login: React.FC = () => {
     }
     setLoading(true);
     try {
+      const auth = getClientAuth();
       const provider = new GoogleAuthProvider();
       const res = await signInWithPopup(auth, provider);
 
@@ -75,6 +77,7 @@ const Login: React.FC = () => {
     }
     setLoading(true);
     try {
+      const auth = getClientAuth();
       if (isRegister) {
         const userCred = await createUserWithEmailAndPassword(
           auth,
@@ -315,13 +318,9 @@ const Login: React.FC = () => {
         {/* Footer Links */}
         <div className="mt-6 text-center">
           <div className="flex items-center justify-center gap-4 text-sm text-slate-500">
-            <a href="/" className="hover:text-slate-700 transition-colors">
+            <Link href="/" className="hover:text-slate-700 transition-colors">
               Home
-            </a>
-            <span>•</span>
-            <a href="#" className="hover:text-slate-700 transition-colors">
-              Privacy
-            </a>
+            </Link>
             <span>•</span>
             <a href="#" className="hover:text-slate-700 transition-colors">
               Terms

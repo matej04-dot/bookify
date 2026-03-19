@@ -1,4 +1,4 @@
-import { db } from "../firebase-config";
+import { getClientDb } from "../firebase-config";
 import {
   doc,
   setDoc,
@@ -22,6 +22,7 @@ export interface User {
 
 export async function saveUser(user: User) {
   if (!user?.uid) throw new Error("saveUser: missing uid");
+  const db = getClientDb();
   const userRef = doc(db, "users", user.uid);
 
   try {
@@ -74,6 +75,7 @@ export async function saveUser(user: User) {
 }
 
 export async function getUser(uid: string) {
+  const db = getClientDb();
   const snap = await getDoc(doc(db, "users", uid));
   return snap.exists() ? snap.data() : null;
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import StarRating from "./Rating";
 import { addReview } from "../services/reviews";
-import { auth } from "../firebase-config";
+import { getClientAuth } from "../firebase-config";
 
 type ReviewComponentProps = {
   onClose?: () => void;
@@ -25,6 +25,7 @@ export default function ReviewComponent({
     e.preventDefault();
     setError(null);
 
+    const auth = getClientAuth();
     const user = auth.currentUser;
     if (!user) {
       setError("Not authenticated");

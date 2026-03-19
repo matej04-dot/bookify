@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import ReviewComponent from "./ReviewComponent";
-import { getAuth } from "firebase/auth";
+import { getClientAuth } from "../firebase-config";
 
 export default function BookDetailsClient({
   bookKey,
@@ -17,7 +17,7 @@ export default function BookDetailsClient({
       <button
         className="mb-6 inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2"
         onClick={() => {
-          const auth = getAuth();
+          const auth = getClientAuth();
           const isAuthenticated = !!auth.currentUser;
           if (isAuthenticated) {
             setShowReviewModal(true);

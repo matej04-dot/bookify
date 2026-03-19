@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function BookNotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white px-4">
@@ -35,14 +37,14 @@ export default function BookNotFound() {
           >
             Try Again
           </button>
-          <a
+          <Link
             href="/"
             className="px-6 py-3 bg-white text-blue-600 border-2 border-blue-600 
                      rounded-xl font-semibold shadow-lg hover:shadow-xl 
                      transition-all duration-200 hover:scale-105"
           >
             Go Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

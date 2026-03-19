@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth, db, subscribeToAuthChanges } from "../firebase-config";
+import {
+  getClientAuth,
+  getClientDb,
+  subscribeToAuthChanges,
+} from "../firebase-config";
 import {
   collection,
   query,
@@ -42,6 +46,7 @@ function AdminPanel() {
       }
 
       try {
+        const db = getClientDb();
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const role = userDoc.exists() ? (userDoc.data().role as string) : null;
         setIsAdmin(role === "admin");
@@ -64,6 +69,7 @@ function AdminPanel() {
     setLoading(true);
     setError(null);
 
+    const db = getClientDb();
     const q = query(collection(db, "users"));
     const unsub = onSnapshot(
       q,
@@ -97,7 +103,7 @@ function AdminPanel() {
     const ok = confirm("Promote this user to admin?");
     if (!ok) return;
 
-    const authUser = auth.currentUser;
+    const authUser = getClientAuth().currentUser;
     if (!authUser) {
       alert("You must be logged in as admin.");
       return;

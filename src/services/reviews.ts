@@ -1,4 +1,4 @@
-import { db } from "../firebase-config";
+import { getClientDb } from "../firebase-config";
 import {
   collection,
   query,
@@ -18,6 +18,7 @@ export async function addReview(review: Review) {
       "Invalid review payload: missing bookId (set from URL before calling)",
     );
 
+  const db = getClientDb();
   const colRef = collection(db, "reviews");
 
   const newDocRef = doc(colRef);
@@ -66,6 +67,7 @@ export async function addReview(review: Review) {
 }
 
 export async function getUserReviews(userId: string) {
+  const db = getClientDb();
   const colRef = collection(db, "reviews");
   const q = query(colRef, where("userId", "==", userId));
   const snapshot = await getDocs(q);
@@ -81,6 +83,8 @@ export async function updateReview(
   },
 ) {
   if (!reviewId) throw new Error("Missing reviewId");
+
+  const db = getClientDb();
 
   const reviewRef = doc(db, "reviews", reviewId);
 

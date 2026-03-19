@@ -6,23 +6,27 @@ import type { User } from "@/services/users";
 
 const AuthListener = () => {
   useEffect(() => {
-    const unsub = subscribeToAuthChanges(async (user) => {
-      if (!user || !user.uid) {
-        return;
-      }
+    try {
+      const unsub = subscribeToAuthChanges(async (user) => {
+        if (!user || !user.uid) {
+          return;
+        }
 
-      try {
-        const payload: User = {
-          uid: user.uid,
-          email: user.email ?? null,
-          displayName: user.displayName ?? null,
-        };
+        try {
+          const payload: User = {
+            uid: user.uid,
+            email: user.email ?? null,
+            displayName: user.displayName ?? null,
+          };
 
-        await saveUser(payload);
-      } catch {}
-    });
+          await saveUser(payload);
+        } catch {}
+      });
 
-    return () => unsub();
+      return () => unsub();
+    } catch {
+      return () => {};
+    }
   }, []);
 
   return null;
