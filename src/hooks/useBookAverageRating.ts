@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { getClientDb } from "@/firebase-config";
 
 type UseBookAverageRatingResult = {
   loading: boolean;
@@ -26,30 +24,34 @@ export function useBookAverageRating(
         if (mounted) {
           setAverage(null);
           setReviewCount(null);
+          setLoading(false);
         }
         return;
       }
 
       setLoading(true);
       try {
-        const db = getClientDb();
-        const ref = doc(db, "bookAvgRating", normalizedKey);
-        const snap = await getDoc(ref);
-        if (!mounted) return;
+        const response = await fetch(
+          `/api/reviews/${encodeURIComponent(normalizedKey)}/summary`,
+        );
 
-        if (!snap.exists()) {
-          setAverage(null);
-          setReviewCount(null);
-          return;
+        if (!response.ok) {
+          throw new Error("Failed to fetch rating summary");
         }
 
-        const data = snap.data() as { total?: number; count?: number };
-        const total = Number(data.total ?? 0);
-        const count = Number(data.count ?? 0);
-        const avg = count > 0 ? Math.round((total / count) * 10) / 10 : 0;
+        const payload = (await response.json()) as {
+          average?: number | null;
+          reviewCount?: number | null;
+        };
 
-        setAverage(avg);
-        setReviewCount(count);
+        if (!mounted) return;
+
+        setAverage(
+          typeof payload.average === "number" ? payload.average : null,
+        );
+        setReviewCount(
+          typeof payload.reviewCount === "number" ? payload.reviewCount : null,
+        );
       } catch {
         if (mounted) {
           setAverage(null);

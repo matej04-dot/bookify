@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { getClientAuth, hasFirebaseClientConfig } from "../firebase-config";
+import {
+  getClientAuth,
+  getMissingFirebaseClientConfigFields,
+  hasFirebaseClientConfig,
+} from "../firebase-config";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -13,6 +17,29 @@ import {
 import { useRouter } from "next/navigation";
 import { saveUser } from "../services/users";
 import { useSearchParams } from "next/navigation";
+
+function toUserAuthError(err: any): string {
+  const code = typeof err?.code === "string" ? err.code : "";
+
+  switch (code) {
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+      return "Invalid email or password.";
+    case "auth/email-already-in-use":
+      return "This email is already in use.";
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/weak-password":
+      return "Password is too weak.";
+    case "auth/popup-closed-by-user":
+      return "Sign in was canceled.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please try again later.";
+    default:
+      return "Authentication failed. Please try again.";
+  }
+}
 
 const Login: React.FC = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -34,12 +61,27 @@ const Login: React.FC = () => {
 
   const safeRedirectPath = getSafeRedirectPath(from);
 
+  const getMissingConfigMessage = () => {
+    const missing = getMissingFirebaseClientConfigFields();
+    if (missing.length === 0) {
+      return "Authentication is currently unavailable. Missing Firebase client configuration.";
+    }
+
+    const envNames = missing.map((field) => {
+      if (field === "apiKey") return "NEXT_PUBLIC_FIREBASE_API_KEY";
+      if (field === "authDomain") return "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN";
+      if (field === "projectId") return "NEXT_PUBLIC_FIREBASE_PROJECT_ID";
+      if (field === "appId") return "NEXT_PUBLIC_FIREBASE_APP_ID";
+      return field;
+    });
+
+    return `Authentication is unavailable. Missing env: ${envNames.join(", ")}`;
+  };
+
   const handleGoogleLogin = async () => {
     setError(null);
     if (!hasFirebaseClientConfig()) {
-      setError(
-        "Authentication is currently unavailable. Missing Firebase client configuration.",
-      );
+      setError(getMissingConfigMessage());
       return;
     }
     setLoading(true);
@@ -60,7 +102,7 @@ const Login: React.FC = () => {
 
       router.replace(safeRedirectPath);
     } catch (err: any) {
-      setError(err.message ?? String(err));
+      setError(toUserAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -70,9 +112,7 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
     if (!hasFirebaseClientConfig()) {
-      setError(
-        "Authentication is currently unavailable. Missing Firebase client configuration.",
-      );
+      setError(getMissingConfigMessage());
       return;
     }
     setLoading(true);
@@ -99,7 +139,7 @@ const Login: React.FC = () => {
       }
       router.replace(safeRedirectPath);
     } catch (err: any) {
-      setError(err.message ?? String(err));
+      setError(toUserAuthError(err));
     } finally {
       setLoading(false);
     }

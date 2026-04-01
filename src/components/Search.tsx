@@ -108,7 +108,6 @@ export default function Search() {
   const [value, setValue] = useState("");
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [recommendVisible, setRecommendVisible] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -121,32 +120,8 @@ export default function Search() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
-    setIsNavigating(false);
 
-    // Clear previous timeout
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    // Only fetch if query is at least 2 characters
-    if (newValue.trim().length >= 2) {
-      // Debounce API calls by 300ms
-      debounceTimeoutRef.current = setTimeout(async () => {
-        activeRequestRef.current?.abort();
-        const controller = new AbortController();
-        activeRequestRef.current = controller;
-
-        const results = await fetchBookTitles(
-          newValue.trim(),
-          searchBy,
-          controller.signal,
-        );
-        if (controller.signal.aborted) return;
-
-        setRecommendations(results);
-        setRecommendVisible(results.length > 0);
-      }, 300);
-    } else {
+    if (newValue.trim().length < 2) {
       setRecommendations([]);
       setRecommendVisible(false);
     }
@@ -155,18 +130,18 @@ export default function Search() {
   const navigateToSearch = useCallback(
     (rawValue: string) => {
       const trimmed = rawValue.trim();
-      if (!trimmed || isNavigating) return;
+      if (!trimmed) return;
 
-      setIsNavigating(true);
       const formatted = encodeURIComponent(trimmed);
       activeRequestRef.current?.abort();
       setRecommendations([]);
       setRecommendVisible(false);
+      setValue("");
 
       const searchKey = `/search?q=${formatted}&by=${searchBy}`;
       router.push(searchKey);
     },
-    [isNavigating, router, searchBy],
+    [router, searchBy],
   );
 
   const handleClick = useCallback(() => {
@@ -210,7 +185,7 @@ export default function Search() {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [searchBy]);
+  }, [searchBy, value]);
 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
@@ -294,8 +269,7 @@ export default function Search() {
         <button
           type="button"
           onClick={handleClick}
-          disabled={isNavigating || !value.trim()}
-          className="absolute right-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute right-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700"
         >
           Search
         </button>

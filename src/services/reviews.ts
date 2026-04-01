@@ -1,14 +1,25 @@
-import { getClientDb } from "../firebase-config";
 import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  serverTimestamp,
-  runTransaction,
-} from "firebase/firestore";
+  getClientAuth,
+  getClientDb,
+  hasFirebaseClientConfig,
+} from "../firebase-config";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import type { Review } from "../types/Types";
+
+async function getIdTokenOrThrow() {
+  if (!hasFirebaseClientConfig()) {
+    throw new Error("Missing Firebase client configuration");
+  }
+
+  const auth = getClientAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  return user.getIdToken();
+}
 
 export async function addReview(review: Review) {
   if (!review || !review.userId)
@@ -18,52 +29,29 @@ export async function addReview(review: Review) {
       "Invalid review payload: missing bookId (set from URL before calling)",
     );
 
-  const db = getClientDb();
-  const colRef = collection(db, "reviews");
+  const idToken = await getIdTokenOrThrow();
+  const response = await fetch("/api/reviews", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({
+      bookId: review.bookId,
+      rating: review.rating,
+      comment: review.comment ?? null,
+      username: review.username ?? null,
+      bookName: review.bookName ?? null,
+    }),
+  });
 
-  const newDocRef = doc(colRef);
-  const aggRef = doc(db, "bookAvgRating", review.bookId);
-
-  try {
-    await runTransaction(db, async (tx) => {
-      const aggSnap = await tx.get(aggRef);
-
-      tx.set(newDocRef, {
-        userId: review.userId,
-        bookId: review.bookId,
-        rating: review.rating,
-        bookName: review.bookName ?? null,
-        comment: review.comment ?? null,
-        username: review.username ?? null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      if (!aggSnap.exists()) {
-        tx.set(aggRef, {
-          bookId: review.bookId,
-          bookName: review.bookName ?? null,
-          total: review.rating,
-          count: 1,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      } else {
-        const agg = aggSnap.data() as any;
-        const total = (agg.total ?? 0) + review.rating;
-        const count = (agg.count ?? 0) + 1;
-        tx.update(aggRef, {
-          total,
-          count,
-          updatedAt: serverTimestamp(),
-        });
-      }
-    });
-
-    return { id: newDocRef.id, updated: false };
-  } catch (err) {
-    throw err;
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload?.error || "Failed to submit review");
   }
+
+  const payload = await response.json();
+  return { id: payload?.id, updated: false };
 }
 
 export async function getUserReviews(userId: string) {
@@ -84,60 +72,20 @@ export async function updateReview(
 ) {
   if (!reviewId) throw new Error("Missing reviewId");
 
-  const db = getClientDb();
+  const idToken = await getIdTokenOrThrow();
+  const response = await fetch(`/api/reviews/${encodeURIComponent(reviewId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify(params),
+  });
 
-  const reviewRef = doc(db, "reviews", reviewId);
-
-  try {
-    await runTransaction(db, async (tx) => {
-      const reviewSnap = await tx.get(reviewRef);
-      if (!reviewSnap.exists()) throw new Error("Review not found");
-
-      const reviewData: any = reviewSnap.data();
-      const oldRating = Number(reviewData.rating ?? 0);
-      const hasNewRating =
-        typeof params.rating === "number" && !isNaN(params.rating);
-      const newRating = hasNewRating ? Number(params.rating) : oldRating;
-
-      const updatePayload: any = {
-        updatedAt: serverTimestamp(),
-      };
-      if ("comment" in params) updatePayload.comment = params.comment ?? null;
-      if ("username" in params)
-        updatePayload.username = params.username ?? reviewData.username ?? null;
-      if (hasNewRating) updatePayload.rating = newRating;
-
-      const bookId = reviewData.bookId;
-      if (!bookId) throw new Error("Review missing bookId");
-      const aggRef = doc(db, "bookAvgRating", bookId);
-      const aggSnap = await tx.get(aggRef);
-
-      tx.update(reviewRef, updatePayload);
-
-      if (hasNewRating) {
-        if (!aggSnap.exists()) {
-          tx.set(aggRef, {
-            bookId,
-            total: newRating,
-            count: 1,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
-        } else {
-          const agg: any = aggSnap.data();
-          const total = (agg.total ?? 0) - oldRating + newRating;
-          const count = agg.count ?? 1;
-          tx.update(aggRef, {
-            total,
-            count,
-            updatedAt: serverTimestamp(),
-          });
-        }
-      }
-    });
-
-    return { updated: true };
-  } catch (err) {
-    throw err;
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload?.error || "Failed to update review");
   }
+
+  return { updated: true };
 }

@@ -43,7 +43,7 @@ export function useFetch<T>(url: string, options?: UseFetchOptions) {
     return () => {
       isCancelled = true;
     };
-  }, [url]);
+  }, [url, options]);
 
   return { data, loading, error };
 }

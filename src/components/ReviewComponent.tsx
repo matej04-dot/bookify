@@ -3,7 +3,7 @@
 import { useState } from "react";
 import StarRating from "./Rating";
 import { addReview } from "../services/reviews";
-import { getClientAuth } from "../firebase-config";
+import { getClientAuth, hasFirebaseClientConfig } from "../firebase-config";
 
 type ReviewComponentProps = {
   onClose?: () => void;
@@ -24,6 +24,13 @@ export default function ReviewComponent({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!hasFirebaseClientConfig()) {
+      setError(
+        "Review submission is unavailable. Missing Firebase client configuration.",
+      );
+      return;
+    }
 
     const auth = getClientAuth();
     const user = auth.currentUser;

@@ -1,16 +1,44 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { getApp, getApps, initializeApp } from "firebase/app";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  type Auth,
+  type User,
+} from "firebase/auth";
 import { getFirestore, initializeFirestore } from "firebase/firestore";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBCeRqrD_ohr7Bze8Wl7oU_RQUbcbN-fxs",
-  authDomain: "bookify-79744.firebaseapp.com",
-  projectId: "bookify-79744",
-  storageBucket: "bookify-79744.firebasestorage.app",
-  messagingSenderId: "895999662926",
-  appId: "1:895999662926:web:7b2ac2eece6164bf415c1f",
-  measurementId: "G-NH7M9RGXBX",
-} as const;
+type FirebaseClientConfig = {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  measurementId: string;
+};
+
+type FirebaseClientState = {
+  auth: Auth;
+  db: ReturnType<typeof getFirestore>;
+};
+
+let firebaseState: FirebaseClientState | null = null;
+
+function readFirebaseClientConfig(): FirebaseClientConfig {
+  return {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() || "",
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() || "",
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || "",
+    storageBucket:
+      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim() || "",
+    messagingSenderId:
+      process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim() || "",
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim() || "",
+    measurementId:
+      process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim() || "",
+  };
+}
 
 const REQUIRED_FIREBASE_CLIENT_FIELDS = [
   "apiKey",
@@ -20,24 +48,47 @@ const REQUIRED_FIREBASE_CLIENT_FIELDS = [
 ] as const;
 
 export function hasFirebaseClientConfig() {
-  return REQUIRED_FIREBASE_CLIENT_FIELDS.every((field) => {
+  return getMissingFirebaseClientConfigFields().length === 0;
+}
+
+export function getMissingFirebaseClientConfigFields() {
+  const firebaseConfig = readFirebaseClientConfig();
+  return REQUIRED_FIREBASE_CLIENT_FIELDS.filter((field) => {
     const value = firebaseConfig[field];
-    return typeof value === "string" && value.trim().length > 0;
+    return !(typeof value === "string" && value.trim().length > 0);
   });
 }
 
-const app = initializeApp(firebaseConfig);
-const isLocalhost =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1");
+function getFirebaseClientState(): FirebaseClientState {
+  if (firebaseState) {
+    return firebaseState;
+  }
 
-const auth = getAuth(app);
-const db = isLocalhost
-  ? initializeFirestore(app, {
-      experimentalForceLongPolling: true,
-    })
-  : getFirestore(app);
+  if (typeof window === "undefined") {
+    throw new Error("Firebase client cannot be initialized on the server.");
+  }
+
+  if (!hasFirebaseClientConfig()) {
+    throw new Error("Missing Firebase client configuration.");
+  }
+
+  const app = getApps().length
+    ? getApp()
+    : initializeApp(readFirebaseClientConfig());
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+
+  const auth = getAuth(app);
+  const db = isLocalhost
+    ? initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+      })
+    : getFirestore(app);
+
+  firebaseState = { auth, db };
+  return firebaseState;
+}
 
 export function subscribeToAuthChanges(callback: (user: User | null) => void) {
   if (typeof window === "undefined") {
@@ -45,7 +96,13 @@ export function subscribeToAuthChanges(callback: (user: User | null) => void) {
     return () => {};
   }
 
+  if (!hasFirebaseClientConfig()) {
+    callback(null);
+    return () => {};
+  }
+
   try {
+    const { auth } = getFirebaseClientState();
     return onAuthStateChanged(auth, callback);
   } catch (error) {
     console.error("Failed to initialize Firebase auth listener", error);
@@ -55,11 +112,11 @@ export function subscribeToAuthChanges(callback: (user: User | null) => void) {
 }
 
 export function getClientAuth() {
-  return auth;
+  return getFirebaseClientState().auth;
 }
 
 export function getClientDb() {
-  return db;
+  return getFirebaseClientState().db;
 }
 
 export async function logoutCurrentUser() {
@@ -67,7 +124,9 @@ export async function logoutCurrentUser() {
     return;
   }
 
-  await signOut(auth);
-}
+  if (!hasFirebaseClientConfig()) {
+    return;
+  }
 
-export { auth, db };
+  await signOut(getFirebaseClientState().auth);
+}

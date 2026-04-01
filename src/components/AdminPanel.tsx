@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   getClientAuth,
   getClientDb,
@@ -25,6 +26,66 @@ type UserDoc = {
   role?: string | null;
   createdAt?: any;
   [key: string]: any;
+};
+
+const getInitials = (value: string) => {
+  const base = value.includes("@") ? value.split("@")[0] : value;
+  const parts = base.split(/[\s._-]+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  return base.slice(0, 2).toUpperCase() || "U";
+};
+
+type InitialsAvatarProps = {
+  label: string;
+  alt: string;
+  width: number;
+  height: number;
+  className: string;
+  background: string;
+  color: string;
+};
+
+const InitialsAvatar = ({
+  label,
+  alt,
+  width,
+  height,
+  className,
+  background,
+  color,
+}: InitialsAvatarProps) => {
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const initials = getInitials(label);
+  const size = Math.max(width, height, 64);
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    label,
+  )}&background=${background}&color=${color}&size=${size}`;
+
+  if (avatarLoadFailed) {
+    return (
+      <div
+        className={`${className} bg-slate-700 text-white font-bold flex items-center justify-center`}
+      >
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={avatarUrl}
+      alt={alt}
+      width={width}
+      height={height}
+      unoptimized
+      onError={() => setAvatarLoadFailed(true)}
+      className={className}
+    />
+  );
 };
 
 function AdminPanel() {
@@ -276,18 +337,15 @@ function AdminPanel() {
                 >
                   <div className="border-b border-border bg-muted/40 p-4">
                     <div className="flex items-center gap-3">
-                      {(() => {
-                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          u.displayName ?? u.email ?? "User",
-                        )}&background=FFFFFF&color=2563EB&size=128`;
-                        return (
-                          <img
-                            src={avatarUrl}
-                            alt={u.displayName ?? u.email ?? "User avatar"}
-                            className="h-14 w-14 rounded-xl border border-border"
-                          />
-                        );
-                      })()}
+                      <InitialsAvatar
+                        label={u.displayName ?? u.email ?? "User"}
+                        alt={u.displayName ?? u.email ?? "User avatar"}
+                        width={56}
+                        height={56}
+                        background="FFFFFF"
+                        color="2563EB"
+                        className="h-14 w-14 rounded-xl border border-border"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="truncate text-lg font-semibold text-foreground">
                           {u.displayName ?? "Unknown"}
@@ -420,18 +478,15 @@ function AdminPanel() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {(() => {
-                            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                              u.displayName ?? u.email ?? "User",
-                            )}&background=eff6ff&color=2563eb&size=64`;
-                            return (
-                              <img
-                                src={avatarUrl}
-                                alt={u.displayName ?? u.email ?? "User avatar"}
-                                className="h-10 w-10 rounded-lg border border-border"
-                              />
-                            );
-                          })()}
+                          <InitialsAvatar
+                            label={u.displayName ?? u.email ?? "User"}
+                            alt={u.displayName ?? u.email ?? "User avatar"}
+                            width={40}
+                            height={40}
+                            background="eff6ff"
+                            color="2563eb"
+                            className="h-10 w-10 rounded-lg border border-border"
+                          />
                           <div>
                             <div className="font-semibold text-foreground">
                               {u.displayName ?? "Unknown"}
@@ -462,15 +517,15 @@ function AdminPanel() {
                           : "—"}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="inline-flex items-center gap-2">
+                        <div className="flex items-center justify-end gap-2 min-w-[244px]">
                           <button
-                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+                            className="h-10 min-w-[112px] whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
                             onClick={() => viewDetails(u.id)}
                           >
                             Details
                           </button>
                           <button
-                            className="rounded-lg border border-primary/20 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-10 min-w-[112px] whitespace-nowrap rounded-lg border border-primary/20 bg-primary px-3 py-2 text-center text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                             onClick={() => promoteToAdmin(u.id)}
                             disabled={
                               promotingUserId === u.id || u.role === "admin"

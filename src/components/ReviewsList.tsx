@@ -1,14 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
-import { getClientDb } from "../firebase-config";
 import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
 import { Spinner } from "./ui/spinner";
@@ -24,38 +16,51 @@ export default function ReviewsList({ bookId }: ReviewListProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+
     if (!bookId) {
       setLoading(false);
       return;
     }
 
     const normalized = bookId.replace(/^\/?works\//i, "").trim();
-    const db = getClientDb();
+    setLoading(true);
 
-    const q = query(
-      collection(db, "reviews"),
-      where("bookId", "==", normalized),
-      orderBy("createdAt", "desc"),
-    );
+    const loadReviews = async () => {
+      try {
+        const response = await fetch(
+          `/api/reviews/${encodeURIComponent(normalized)}`,
+        );
+        if (!response.ok) {
+          throw new Error("Failed to load reviews");
+        }
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const reviewsData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Review[];
-        setReviews(reviewsData);
-        setLoading(false);
+        const data = (await response.json()) as Review[];
+        if (!active) {
+          return;
+        }
+
+        setReviews(Array.isArray(data) ? data : []);
         setError(null);
-      },
-      () => {
-        setError("Failed to load reviews");
-        setLoading(false);
-      },
-    );
+      } catch {
+        if (!active) {
+          return;
+        }
 
-    return () => unsubscribe();
+        setReviews([]);
+        setError("Failed to load reviews");
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadReviews();
+
+    return () => {
+      active = false;
+    };
   }, [bookId]);
 
   if (!bookId) {

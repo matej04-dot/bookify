@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import {
   getClientDb,
   logoutCurrentUser,
@@ -21,6 +22,17 @@ import ReviewItem from "./ReviewItem";
 import { Spinner } from "./ui/spinner";
 import { EmptyState } from "./ui/empty-state";
 
+const getInitials = (value: string) => {
+  const base = value.includes("@") ? value.split("@")[0] : value;
+  const parts = base.split(/[\s._-]+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  return base.slice(0, 2).toUpperCase() || "U";
+};
+
 export default function AccountDetails() {
   const router = useRouter();
   const [authUser, setAuthUser] = useState<User | null>(null);
@@ -28,8 +40,13 @@ export default function AccountDetails() {
   const [userReviews, setUserReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const profileUnsubRef = useRef<(() => void) | null>(null);
   const reviewsUnsubRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [authUser?.uid]);
 
   const handleClick = async () => {
     try {
@@ -166,8 +183,10 @@ export default function AccountDetails() {
       </div>
     );
 
+  const userLabel = authUser.displayName || authUser.email || "User";
+  const userInitials = getInitials(userLabel);
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    authUser.displayName || "User",
+    userLabel,
   )}&background=eff6ff&color=0f172a&size=256`;
 
   return (
@@ -205,11 +224,21 @@ export default function AccountDetails() {
           <div className="flex flex-col lg:flex-row gap-6 p-6 sm:p-8">
             <aside className="w-full lg:w-80 flex flex-col items-center lg:items-start">
               <div className="mb-4 rounded-2xl border border-border bg-muted/40 p-2">
-                <img
-                  src={avatarUrl}
-                  alt={authUser.displayName ?? "User avatar"}
-                  className="h-28 w-28 rounded-xl object-cover sm:h-32 sm:w-32"
-                />
+                {avatarLoadFailed ? (
+                  <div className="h-28 w-28 rounded-xl border border-border bg-slate-700 text-white text-2xl font-bold flex items-center justify-center sm:h-32 sm:w-32">
+                    {userInitials}
+                  </div>
+                ) : (
+                  <Image
+                    src={avatarUrl}
+                    alt={authUser.displayName ?? "User avatar"}
+                    width={128}
+                    height={128}
+                    unoptimized
+                    onError={() => setAvatarLoadFailed(true)}
+                    className="h-28 w-28 rounded-xl object-cover sm:h-32 sm:w-32"
+                  />
+                )}
               </div>
 
               <div className="text-center lg:text-left w-full mb-6">

@@ -17,7 +17,13 @@ const nextConfig = {
         protocol: "https",
         hostname: "covers.openlibrary.org",
         port: "",
-        pathname: "/**",
+        pathname: "/b/**",
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+        port: "",
+        pathname: "/api/**",
       },
     ],
     // Optimizacija slika

@@ -137,8 +137,10 @@ export default function BookDetails({
               <div className="flex-shrink-0 flex flex-col items-center sm:items-start">
                 {authors[0].photos?.[0] ? (
                   <div className="w-24 sm:w-28">
-                    <img
+                    <Image
                       src={`${imagesBaseUrl}/b/id/${authors[0].photos[0]}-M.jpg`}
+                      width={112}
+                      height={112}
                       className="h-auto w-full rounded-lg border border-border"
                       alt={authors[0].name}
                     />

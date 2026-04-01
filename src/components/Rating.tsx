@@ -1,6 +1,5 @@
 "use client";
 import { Rating, RatingButton } from "@/components/ui/rating";
-import { useState, useEffect, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
@@ -16,24 +15,16 @@ const StarRating = ({
   className = "",
   readOnly = false,
 }: StarRatingProps) => {
-  const [internalValue, setInternalValue] = useState(value);
-
-  // Sync internal value sa prop value kad se promijeni
-  useLayoutEffect(() => {
-    if (readOnly) {
-      setInternalValue(value);
-    }
-  }, [value, readOnly]);
-
-  const displayValue = readOnly ? value : Math.round(internalValue);
+  const displayValue = Math.round(value);
 
   return (
     <Rating
       value={displayValue}
       readOnly={readOnly}
       onValueChange={(v) => {
-        setInternalValue(v);
-        onChange?.(v);
+        if (!readOnly) {
+          onChange?.(v);
+        }
       }}
       className={cn("flex gap-1", className)}
     >

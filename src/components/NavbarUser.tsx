@@ -1,20 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { logoutCurrentUser, subscribeToAuthChanges } from "../firebase-config";
 import { type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
+
+const getInitials = (value: string) => {
+  const base = value.includes("@") ? value.split("@")[0] : value;
+  const parts = base.split(/[\s._-]+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  return base.slice(0, 2).toUpperCase() || "U";
+};
 
 const NavbarUser: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((u) => {
       setUser(u);
       setLoading(false);
+      setAvatarLoadFailed(false);
     });
     return () => unsubscribe();
   }, []);
@@ -35,9 +49,12 @@ const NavbarUser: React.FC = () => {
     );
   if (!user) return null;
 
+  const userLabel = user.displayName || user.email || "User";
+  const userInitials = getInitials(userLabel);
+
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    user.displayName || user.email || "User",
-  )}&background=2563eb&color=ffffff&bold=true`;
+    userLabel,
+  )}&background=2563eb&color=ffffff&bold=true&size=128`;
 
   return (
     <div className="relative z-50">
@@ -48,11 +65,21 @@ const NavbarUser: React.FC = () => {
         onClick={() => setShowMenu((v) => !v)}
         aria-label="User menu"
       >
-        <img
-          src={avatarUrl}
-          alt="User avatar"
-          className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
-        />
+        {avatarLoadFailed ? (
+          <div className="w-8 h-8 rounded-full ring-2 ring-white shadow-sm bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+            {userInitials}
+          </div>
+        ) : (
+          <Image
+            src={avatarUrl}
+            alt="User avatar"
+            width={32}
+            height={32}
+            unoptimized
+            onError={() => setAvatarLoadFailed(true)}
+            className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
+          />
+        )}
         <span className="hidden md:inline font-semibold text-sm text-gray-700">
           {user.displayName || user.email?.split("@")[0]}
         </span>
@@ -85,11 +112,21 @@ const NavbarUser: React.FC = () => {
             {/* User Info Header */}
             <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
               <div className="flex items-center gap-3">
-                <img
-                  src={avatarUrl}
-                  alt="User avatar"
-                  className="w-12 h-12 rounded-full ring-2 ring-blue-200 shadow-sm"
-                />
+                {avatarLoadFailed ? (
+                  <div className="w-12 h-12 rounded-full ring-2 ring-blue-200 shadow-sm bg-blue-600 text-white text-sm font-bold flex items-center justify-center">
+                    {userInitials}
+                  </div>
+                ) : (
+                  <Image
+                    src={avatarUrl}
+                    alt="User avatar"
+                    width={48}
+                    height={48}
+                    unoptimized
+                    onError={() => setAvatarLoadFailed(true)}
+                    className="w-12 h-12 rounded-full ring-2 ring-blue-200 shadow-sm"
+                  />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate">
                     {user.displayName || "User"}
