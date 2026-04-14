@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
+  getClientAuth,
   getClientDb,
   subscribeToAuthChanges,
 } from "../firebase-config";
@@ -17,13 +18,18 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { Spinner } from "./ui/spinner";
-import type { AdminDashboardStats } from "../types/Types";
+import type {
+  AdminDashboardStats,
+  AdminStatsItem,
+} from "../types/Types";
 
 type UserDoc = {
   id: string;
   email?: string | null;
   displayName?: string | null;
   role?: string | null;
+  isBanned?: boolean;
+  bannedReason?: string | null;
   createdAt?: any;
   [key: string]: any;
 };
@@ -88,15 +94,8 @@ const InitialsAvatar = ({
   );
 };
 
-type TopStatItem = {
-  key: string;
-  label: string;
-  reviewCount: number;
-};
-
 type ReviewAggregate = {
   createdAtMs: number;
-  rating: number | null;
   bookId: string;
   bookLabel: string;
   userId: string;
@@ -140,7 +139,7 @@ const toTimestampMs = (value: unknown): number => {
   return 0;
 };
 
-const topFive = (input: Map<string, TopStatItem>): TopStatItem[] =>
+const topFive = (input: Map<string, AdminStatsItem>): AdminStatsItem[] =>
   Array.from(input.values())
     .sort((a, b) => {
       if (b.reviewCount !== a.reviewCount) {
@@ -157,7 +156,6 @@ const toReviewAggregate = (data: Record<string, unknown>): ReviewAggregate => {
 
   return {
     createdAtMs: toTimestampMs(data.createdAt),
-    rating: Number.isFinite(Number(data.rating)) ? Number(data.rating) : null,
     bookId,
     bookLabel:
       typeof data.bookName === "string" && data.bookName.trim().length > 0
@@ -172,7 +170,7 @@ const toReviewAggregate = (data: Record<string, unknown>): ReviewAggregate => {
 };
 
 const applyCountDelta = (
-  target: Map<string, TopStatItem>,
+  target: Map<string, AdminStatsItem>,
   key: string,
   label: string,
   delta: number,
@@ -196,29 +194,45 @@ const applyCountDelta = (
   });
 };
 
+const formatCompactNumber = (value: number | null | undefined) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "—";
+  }
+
+  return Intl.NumberFormat("en", { notation: "compact" }).format(value);
+};
+
 function AdminPanel() {
   const [users, setUsers] = useState<UserDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminUserId, setAdminUserId] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [liveStats, setLiveStats] = useState<AdminDashboardStats | null>(null);
+  const [apiStats, setApiStats] = useState<AdminDashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [moderationActionUserId, setModerationActionUserId] = useState<
+    string | null
+  >(null);
 
   const router = useRouter();
 
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (user) => {
       if (!user?.uid) {
+        setAdminUserId(null);
         setIsAdmin(false);
-        setStats(null);
+        setLiveStats(null);
+        setApiStats(null);
         setStatsError(null);
         setAuthLoading(false);
         return;
       }
 
       try {
+        setAdminUserId(user.uid);
         const db = getClientDb();
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const role = userDoc.exists() ? (userDoc.data().role as string) : null;
@@ -232,6 +246,104 @@ function AdminPanel() {
 
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (authLoading || !isAdmin) {
+      setApiStats(null);
+      setStatsError(null);
+      setStatsLoading(false);
+      return;
+    }
+
+    let active = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const loadApiStats = async (showLoader: boolean) => {
+      if (showLoader) {
+        setStatsLoading(true);
+      }
+
+      try {
+        const authUser = getClientAuth().currentUser;
+        if (!authUser) {
+          throw new Error("Missing authenticated admin user");
+        }
+
+        const idToken = await authUser.getIdToken();
+        const response = await fetch("/api/admin/stats", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload?.error || "Failed to fetch admin stats");
+        }
+
+        const payload = (await response.json()) as AdminDashboardStats;
+
+        if (!active) {
+          return;
+        }
+
+        setApiStats({
+          totalUsers:
+            typeof payload?.totalUsers === "number" ? payload.totalUsers : null,
+          totalReviews:
+            typeof payload?.totalReviews === "number"
+              ? payload.totalReviews
+              : null,
+          totalWishlistItems:
+            typeof payload?.totalWishlistItems === "number"
+              ? payload.totalWishlistItems
+              : null,
+          activeUsers30d:
+            typeof payload?.activeUsers30d === "number"
+              ? payload.activeUsers30d
+              : null,
+          reviewsLast24h:
+            typeof payload?.reviewsLast24h === "number"
+              ? payload.reviewsLast24h
+              : null,
+          reviewsLast7d:
+            typeof payload?.reviewsLast7d === "number"
+              ? payload.reviewsLast7d
+              : null,
+          topBooksByReviewCount: Array.isArray(payload?.topBooksByReviewCount)
+            ? payload.topBooksByReviewCount
+            : [],
+          topUsersByReviewCount: Array.isArray(payload?.topUsersByReviewCount)
+            ? payload.topUsersByReviewCount
+            : [],
+        });
+        setStatsError(null);
+      } catch {
+        if (active) {
+          setStatsError(
+            "Extended server statistics are temporarily unavailable.",
+          );
+        }
+      } finally {
+        if (active && showLoader) {
+          setStatsLoading(false);
+        }
+      }
+    };
+
+    void loadApiStats(true);
+    intervalId = setInterval(() => {
+      void loadApiStats(false);
+    }, 60_000);
+
+    return () => {
+      active = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [authLoading, isAdmin]);
 
   useEffect(() => {
     if (authLoading || !isAdmin) {
@@ -272,31 +384,19 @@ function AdminPanel() {
 
   useEffect(() => {
     if (authLoading || !isAdmin) {
-      setStats(null);
-      setStatsLoading(false);
+      setLiveStats(null);
       return;
     }
-
-    setStatsLoading(true);
-    setStatsError(null);
 
     const db = getClientDb();
     const reviewsQuery = query(collection(db, "reviews"));
 
     const reviewIndex = new Map<string, ReviewAggregate>();
-    const bookCounts = new Map<string, TopStatItem>();
-    const userCounts = new Map<string, TopStatItem>();
-
-    let ratingTotal = 0;
-    let ratingCount = 0;
+    const bookCounts = new Map<string, AdminStatsItem>();
+    const userCounts = new Map<string, AdminStatsItem>();
 
     const attachReview = (reviewId: string, entry: ReviewAggregate) => {
       reviewIndex.set(reviewId, entry);
-
-      if (entry.rating !== null) {
-        ratingTotal += entry.rating;
-        ratingCount += 1;
-      }
 
       applyCountDelta(bookCounts, entry.bookId, entry.bookLabel, 1);
       applyCountDelta(userCounts, entry.userId, entry.userLabel, 1);
@@ -310,32 +410,30 @@ function AdminPanel() {
 
       reviewIndex.delete(reviewId);
 
-      if (existing.rating !== null) {
-        ratingTotal -= existing.rating;
-        ratingCount = Math.max(ratingCount - 1, 0);
-      }
-
       applyCountDelta(bookCounts, existing.bookId, existing.bookLabel, -1);
       applyCountDelta(userCounts, existing.userId, existing.userLabel, -1);
     };
 
     const publishStats = () => {
       const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
       let reviewsLast24h = 0;
+      let reviewsLast7d = 0;
 
       for (const entry of reviewIndex.values()) {
         if (entry.createdAtMs >= dayAgo) {
           reviewsLast24h += 1;
         }
+
+        if (entry.createdAtMs >= weekAgo) {
+          reviewsLast7d += 1;
+        }
       }
 
-      setStats({
+      setLiveStats({
         totalReviews: reviewIndex.size,
-        globalAverageRating:
-          ratingCount > 0
-            ? Math.round((ratingTotal / ratingCount) * 10) / 10
-            : null,
         reviewsLast24h,
+        reviewsLast7d,
         topBooksByReviewCount: topFive(bookCounts),
         topUsersByReviewCount: topFive(userCounts),
       });
@@ -364,11 +462,9 @@ function AdminPanel() {
         });
 
         publishStats();
-        setStatsLoading(false);
       },
       () => {
-        setStatsError("Failed to load live statistics from Firestore.");
-        setStatsLoading(false);
+        setLiveStats(null);
       },
     );
 
@@ -383,6 +479,69 @@ function AdminPanel() {
     }
     router.push(`/admin/users/${encodeURIComponent(userId)}`);
   };
+
+  const moderateUser = async (user: UserDoc, action: "ban" | "unban") => {
+    if (!isAdmin || !user?.id) {
+      return;
+    }
+
+    if (user.id === adminUserId) {
+      alert("You cannot change moderation state for your own account.");
+      return;
+    }
+
+    const authUser = getClientAuth().currentUser;
+    if (!authUser) {
+      alert("You must be signed in as admin.");
+      return;
+    }
+
+    let reason: string | null = null;
+    if (action === "ban") {
+      const input = window.prompt("Enter a reason for ban:", "");
+      if (input === null) {
+        return;
+      }
+
+      const normalized = input.trim();
+      if (!normalized) {
+        alert("Ban reason is required.");
+        return;
+      }
+
+      reason = normalized;
+    }
+
+    try {
+      setModerationActionUserId(user.id);
+      const idToken = await authUser.getIdToken();
+      const response = await fetch(
+        `/api/admin/users/${encodeURIComponent(user.id)}/ban`,
+        {
+          method: action === "ban" ? "POST" : "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: action === "ban" ? JSON.stringify({ reason }) : undefined,
+        },
+      );
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || "Failed moderation request");
+      }
+    } catch (error: any) {
+      alert(error?.message || "Failed to update moderation state.");
+    } finally {
+      setModerationActionUserId(null);
+    }
+  };
+
+  const dashboardStats = apiStats ?? liveStats;
+  const totalUsersValue = apiStats?.totalUsers ?? users.length;
+  const topBooks = dashboardStats?.topBooksByReviewCount ?? [];
+  const topUsers = dashboardStats?.topUsersByReviewCount ?? [];
 
   if (authLoading) {
     return (
@@ -451,7 +610,7 @@ function AdminPanel() {
             </button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-center gap-2 text-primary">
                 <svg
@@ -470,7 +629,29 @@ function AdminPanel() {
                 <span className="font-semibold">Total Users:</span>
               </div>
               <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-                {users.length}
+                {formatCompactNumber(totalUsersValue)}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-emerald-600">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5V4H2v16h5m10 0v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2m12 0H7m10-10a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+                <span className="font-semibold">Active Users (30d):</span>
+              </div>
+              <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800">
+                {formatCompactNumber(dashboardStats?.activeUsers30d)}
               </div>
             </div>
 
@@ -492,31 +673,7 @@ function AdminPanel() {
                 <span className="font-semibold">Total Reviews:</span>
               </div>
               <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-                {stats?.totalReviews ?? "—"}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-primary">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.95a1 1 0 00.95.69h4.153c.969 0 1.371 1.24.588 1.81l-3.36 2.441a1 1 0 00-.364 1.118l1.285 3.95c.3.922-.755 1.688-1.538 1.118l-3.36-2.441a1 1 0 00-1.175 0l-3.36 2.441c-.783.57-1.838-.196-1.539-1.118l1.286-3.95a1 1 0 00-.364-1.118L2.22 9.377c-.783-.57-.38-1.81.588-1.81h4.153a1 1 0 00.951-.69l1.286-3.95z"
-                  />
-                </svg>
-                <span className="font-semibold">Global Average:</span>
-              </div>
-              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-                {typeof stats?.globalAverageRating === "number"
-                  ? stats.globalAverageRating.toFixed(1)
-                  : "—"}
+                {formatCompactNumber(dashboardStats?.totalReviews)}
               </div>
             </div>
 
@@ -538,37 +695,83 @@ function AdminPanel() {
                 <span className="font-semibold">Reviews (24h):</span>
               </div>
               <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-                {stats?.reviewsLast24h ?? "—"}
+                {formatCompactNumber(dashboardStats?.reviewsLast24h)}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-cyan-700">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="font-semibold">Review Velocity (7d):</span>
+              </div>
+              <div className="rounded-full bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800">
+                {formatCompactNumber(dashboardStats?.reviewsLast7d)}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-violet-700">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 5a3 3 0 00-3 3v11a1 1 0 001.447.894L12 16l8.553 3.894A1 1 0 0022 19V8a3 3 0 00-3-3H5z"
+                  />
+                </svg>
+                <span className="font-semibold">Wishlist Items:</span>
+              </div>
+              <div className="rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-800">
+                {formatCompactNumber(dashboardStats?.totalWishlistItems)}
               </div>
             </div>
           </div>
 
-          {statsLoading && (
+          {statsLoading && !dashboardStats && (
             <div className="mt-4 flex items-center justify-center rounded-2xl border border-border bg-card p-4">
               <Spinner label="Loading statistics..." />
             </div>
           )}
 
           {statsError && (
-            <div className="mt-4 rounded-2xl border border-red-300/60 bg-red-50 p-4 text-sm font-semibold text-red-700">
-              <span>{statsError}</span>
+            <div className="mt-4 rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+              <span>
+                {statsError} Showing fallback analytics where available.
+              </span>
             </div>
           )}
 
-          {!statsLoading && !statsError && stats && (
-            <div className="mt-4">
+          {!statsLoading && dashboardStats && (
+            <div className="mt-6">
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                   <h3 className="mb-4 text-base font-semibold text-foreground">
                     Top 5 Books by Reviews
                   </h3>
-                  {stats.topBooksByReviewCount.length === 0 ? (
+                  {topBooks.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No review data yet.
                     </p>
                   ) : (
                     <ul className="space-y-2">
-                      {stats.topBooksByReviewCount.map((item) => (
+                      {topBooks.map((item) => (
                         <li
                           key={item.key}
                           className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
@@ -587,15 +790,15 @@ function AdminPanel() {
 
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                   <h3 className="mb-4 text-base font-semibold text-foreground">
-                    Top 5 Users by Reviews
+                    Active Reviewers
                   </h3>
-                  {stats.topUsersByReviewCount.length === 0 ? (
+                  {topUsers.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No review data yet.
                     </p>
                   ) : (
                     <ul className="space-y-2">
-                      {stats.topUsersByReviewCount.map((item) => (
+                      {topUsers.map((item) => (
                         <li
                           key={item.key}
                           className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
@@ -671,15 +874,22 @@ function AdminPanel() {
                         <div className="truncate text-lg font-semibold text-foreground">
                           {u.displayName ?? "Unknown"}
                         </div>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
-                            u.role === "admin"
-                              ? "border border-amber-300/60 bg-amber-100/80 text-amber-900"
-                              : "border border-border bg-background text-muted-foreground"
-                          }`}
-                        >
-                          {u.role ?? "user"}
-                        </span>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
+                              u.role === "admin"
+                                ? "border border-amber-300/60 bg-amber-100/80 text-amber-900"
+                                : "border border-border bg-background text-muted-foreground"
+                            }`}
+                          >
+                            {u.role ?? "user"}
+                          </span>
+                          {u.isBanned && (
+                            <span className="inline-flex items-center rounded-full border border-red-300/60 bg-red-100/80 px-2 py-1 text-xs font-semibold text-red-900">
+                              banned
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -721,12 +931,37 @@ function AdminPanel() {
                         : "—"}
                     </div>
 
-                    <div className="border-t border-border pt-3">
+                    {u.isBanned && u.bannedReason && (
+                      <div className="rounded-lg border border-red-200/70 bg-red-50 px-3 py-2 text-xs text-red-700">
+                        Reason: {u.bannedReason}
+                      </div>
+                    )}
+
+                    <div className="grid gap-2 border-t border-border pt-3 sm:grid-cols-2">
                       <button
                         className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
                         onClick={() => viewDetails(u.id)}
                       >
                         View Details
+                      </button>
+                      <button
+                        disabled={
+                          moderationActionUserId === u.id || u.id === adminUserId
+                        }
+                        className={`w-full rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+                          u.isBanned
+                            ? "border-emerald-300/60 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                            : "border-red-300/60 bg-red-50 text-red-800 hover:bg-red-100"
+                        } disabled:cursor-not-allowed disabled:opacity-60`}
+                        onClick={() =>
+                          moderateUser(u, u.isBanned ? "unban" : "ban")
+                        }
+                      >
+                        {moderationActionUserId === u.id
+                          ? "Working..."
+                          : u.isBanned
+                            ? "Unban"
+                            : "Ban"}
                       </button>
                     </div>
                   </div>
@@ -809,15 +1044,27 @@ function AdminPanel() {
                         {u.email ?? "—"}
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            u.role === "admin"
-                              ? "border border-amber-300/60 bg-amber-100/80 text-amber-900"
-                              : "border border-border bg-background text-muted-foreground"
-                          }`}
-                        >
-                          {u.role ?? "user"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                              u.role === "admin"
+                                ? "border border-amber-300/60 bg-amber-100/80 text-amber-900"
+                                : "border border-border bg-background text-muted-foreground"
+                            }`}
+                          >
+                            {u.role ?? "user"}
+                          </span>
+                          {u.isBanned && (
+                            <span className="inline-flex items-center rounded-full border border-red-300/60 bg-red-100/80 px-3 py-1 text-xs font-semibold text-red-900">
+                              banned
+                            </span>
+                          )}
+                        </div>
+                        {u.isBanned && u.bannedReason && (
+                          <div className="mt-2 max-w-xs truncate text-xs text-red-700">
+                            {u.bannedReason}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {u.createdAt?.toDate
@@ -825,7 +1072,27 @@ function AdminPanel() {
                           : "—"}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end min-w-[112px]">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            disabled={
+                              moderationActionUserId === u.id ||
+                              u.id === adminUserId
+                            }
+                            className={`h-10 min-w-[96px] whitespace-nowrap rounded-lg border px-3 py-2 text-center text-sm font-semibold transition ${
+                              u.isBanned
+                                ? "border-emerald-300/60 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                                : "border-red-300/60 bg-red-50 text-red-800 hover:bg-red-100"
+                            } disabled:cursor-not-allowed disabled:opacity-60`}
+                            onClick={() =>
+                              moderateUser(u, u.isBanned ? "unban" : "ban")
+                            }
+                          >
+                            {moderationActionUserId === u.id
+                              ? "Working..."
+                              : u.isBanned
+                                ? "Unban"
+                                : "Ban"}
+                          </button>
                           <button
                             className="h-10 min-w-[112px] whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
                             onClick={() => viewDetails(u.id)}

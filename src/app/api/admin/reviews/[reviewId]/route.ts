@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { getBearerToken, getFirebaseAdmin } from "@/lib/firebase-admin";
+import { isValidBookId, isValidReviewId, normalizeRouteParam } from "@/lib/ids";
 import { limitByIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-
-const REVIEW_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
-const BOOK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 interface RouteContext {
   params: Promise<{ reviewId: string }>;
@@ -22,7 +20,12 @@ class HttpError extends Error {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const rateLimit = limitByIp(request, "admin-review-delete", 30, 60_000);
+    const rateLimit = await limitByIp(
+      request,
+      "admin-review-delete",
+      30,
+      60_000,
+    );
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many requests" },
@@ -47,9 +50,9 @@ export async function DELETE(request: Request, context: RouteContext) {
     const requesterId = idToken.uid;
 
     const { reviewId: rawReviewId = "" } = await context.params;
-    const reviewId = decodeURIComponent(rawReviewId).trim();
+    const reviewId = normalizeRouteParam(rawReviewId);
 
-    if (!REVIEW_ID_PATTERN.test(reviewId)) {
+    if (!isValidReviewId(reviewId)) {
       return NextResponse.json({ error: "Invalid review id" }, { status: 400 });
     }
 
@@ -67,6 +70,10 @@ export async function DELETE(request: Request, context: RouteContext) {
         throw new HttpError(403, "Forbidden");
       }
 
+      if (requesterSnap.data()?.isBanned === true) {
+        throw new HttpError(403, "Forbidden");
+      }
+
       const reviewSnap = await tx.get(reviewRef);
       if (!reviewSnap.exists) {
         throw new HttpError(404, "Review not found");
@@ -76,7 +83,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       const bookId =
         typeof reviewData.bookId === "string" ? reviewData.bookId : "";
 
-      if (!BOOK_ID_PATTERN.test(bookId)) {
+      if (!isValidBookId(bookId)) {
         throw new HttpError(400, "Invalid book id");
       }
 

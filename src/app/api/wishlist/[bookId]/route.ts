@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { getBearerToken, getFirebaseAdmin } from "@/lib/firebase-admin";
+import { isValidBookId, normalizeBookId } from "@/lib/ids";
 import { limitByIp } from "@/lib/rate-limit";
+import { getBanErrorMessage } from "@/lib/user-moderation";
 
 export const runtime = "nodejs";
-
-const BOOK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
-
-const normalizeBookId = (value: string) =>
-  decodeURIComponent(value || "")
-    .replace(/^\/?works\//i, "")
-    .trim();
 
 interface RouteContext {
   params: Promise<{ bookId: string }>;
@@ -17,7 +12,7 @@ interface RouteContext {
 
 export async function GET(request: Request, context: RouteContext) {
   try {
-    const rateLimit = limitByIp(request, "wishlist-status", 120, 60_000);
+    const rateLimit = await limitByIp(request, "wishlist-status", 120, 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many requests" },
@@ -44,7 +39,7 @@ export async function GET(request: Request, context: RouteContext) {
     const { bookId: rawBookId = "" } = await context.params;
     const bookID = normalizeBookId(rawBookId);
 
-    if (!BOOK_ID_PATTERN.test(bookID)) {
+    if (!isValidBookId(bookID)) {
       return NextResponse.json({ error: "Invalid book id" }, { status: 400 });
     }
 
@@ -66,7 +61,7 @@ export async function GET(request: Request, context: RouteContext) {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const rateLimit = limitByIp(request, "wishlist-remove", 40, 60_000);
+    const rateLimit = await limitByIp(request, "wishlist-remove", 40, 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many requests" },
@@ -89,16 +84,21 @@ export async function DELETE(request: Request, context: RouteContext) {
 
     const idToken = await firebaseAdmin.auth().verifyIdToken(token);
     const userID = idToken.uid;
+    const db = firebaseAdmin.firestore();
+    const banMessage = await getBanErrorMessage(db, userID);
+
+    if (banMessage) {
+      return NextResponse.json({ error: banMessage }, { status: 403 });
+    }
 
     const { bookId: rawBookId = "" } = await context.params;
     const bookID = normalizeBookId(rawBookId);
 
-    if (!BOOK_ID_PATTERN.test(bookID)) {
+    if (!isValidBookId(bookID)) {
       return NextResponse.json({ error: "Invalid book id" }, { status: 400 });
     }
 
     const wishlistId = `${userID}_${bookID}`;
-    const db = firebaseAdmin.firestore();
     const ref = db.collection("wishlist").doc(wishlistId);
     const snap = await ref.get();
 

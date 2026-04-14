@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReviewComponent from "./ReviewComponent";
 import {
   getClientAuth,
@@ -28,6 +28,7 @@ export default function BookDetailsClient({
   const [wishlistReady, setWishlistReady] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const wishlistOperationIdRef = useRef(0);
 
   const normalizedBookID = bookKey.replace(/^\/?works\//i, "").trim();
 
@@ -42,6 +43,8 @@ export default function BookDetailsClient({
     }
 
     const unsub = subscribeToAuthChanges(async (user) => {
+      const operationId = ++wishlistOperationIdRef.current;
+
       if (!active) {
         return;
       }
@@ -58,15 +61,15 @@ export default function BookDetailsClient({
       setWishlistReady(false);
       try {
         const status = await isBookInWishlist(normalizedBookID);
-        if (active) {
+        if (active && operationId === wishlistOperationIdRef.current) {
           setInWishlist(status);
         }
       } catch {
-        if (active) {
+        if (active && operationId === wishlistOperationIdRef.current) {
           setInWishlist(false);
         }
       } finally {
-        if (active) {
+        if (active && operationId === wishlistOperationIdRef.current) {
           setWishlistReady(true);
         }
       }
@@ -95,6 +98,7 @@ export default function BookDetailsClient({
     }
 
     try {
+      ++wishlistOperationIdRef.current;
       setWishlistLoading(true);
 
       if (inWishlist) {

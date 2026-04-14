@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getBearerToken, getFirebaseAdmin } from "@/lib/firebase-admin";
+import { isValidBookId, normalizeBookId } from "@/lib/ids";
 import { limitByIp } from "@/lib/rate-limit";
+import { getBanErrorMessage } from "@/lib/user-moderation";
 
 export const runtime = "nodejs";
-
-const BOOK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 type WishlistDoc = {
   id: string;
@@ -13,11 +13,6 @@ type WishlistDoc = {
   };
   [key: string]: unknown;
 };
-
-const normalizeBookId = (value: string) =>
-  decodeURIComponent(value || "")
-    .replace(/^\/?works\//i, "")
-    .trim();
 
 const normalizeText = (value: unknown, maxLength: number) => {
   if (typeof value !== "string") {
@@ -41,7 +36,7 @@ const normalizeAuthors = (value: unknown) => {
 
 export async function GET(request: Request) {
   try {
-    const rateLimit = limitByIp(request, "wishlist-list", 90, 60_000);
+    const rateLimit = await limitByIp(request, "wishlist-list", 90, 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many requests" },
@@ -93,7 +88,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const rateLimit = limitByIp(request, "wishlist-add", 40, 60_000);
+    const rateLimit = await limitByIp(request, "wishlist-add", 40, 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many requests" },
@@ -116,13 +111,19 @@ export async function POST(request: Request) {
 
     const idToken = await firebaseAdmin.auth().verifyIdToken(token);
     const userID = idToken.uid;
+    const db = firebaseAdmin.firestore();
+    const banMessage = await getBanErrorMessage(db, userID);
+
+    if (banMessage) {
+      return NextResponse.json({ error: banMessage }, { status: 403 });
+    }
 
     const body = await request.json().catch(() => null);
 
     const rawBookID = typeof body?.bookID === "string" ? body.bookID : "";
     const bookID = normalizeBookId(rawBookID);
 
-    if (!BOOK_ID_PATTERN.test(bookID)) {
+    if (!isValidBookId(bookID)) {
       return NextResponse.json({ error: "Invalid book id" }, { status: 400 });
     }
 
@@ -136,7 +137,6 @@ export async function POST(request: Request) {
     const coverEditionKey = coverEditionKeyRaw || null;
 
     const wishlistId = `${userID}_${bookID}`;
-    const db = firebaseAdmin.firestore();
     const wishlistRef = db.collection("wishlist").doc(wishlistId);
     const existing = await wishlistRef.get();
 

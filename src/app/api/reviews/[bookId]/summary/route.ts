@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
+import { isValidBookId, normalizeBookId } from "@/lib/ids";
 import { limitByIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-
-const BOOK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 interface RouteContext {
   params: Promise<{ bookId: string }>;
@@ -12,7 +11,7 @@ interface RouteContext {
 
 export async function GET(request: Request, context: RouteContext) {
   try {
-    const rateLimit = limitByIp(request, "reviews-summary", 120, 60_000);
+    const rateLimit = await limitByIp(request, "reviews-summary", 120, 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many requests" },
@@ -24,11 +23,9 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     const { bookId: rawBookId = "" } = await context.params;
-    const normalized = decodeURIComponent(rawBookId)
-      .replace(/^\/?works\//i, "")
-      .trim();
+    const normalized = normalizeBookId(rawBookId);
 
-    if (!BOOK_ID_PATTERN.test(normalized)) {
+    if (!isValidBookId(normalized)) {
       return NextResponse.json({ error: "Invalid book id" }, { status: 400 });
     }
 

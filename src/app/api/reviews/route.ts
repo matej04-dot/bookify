@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getBearerToken, getFirebaseAdmin } from "@/lib/firebase-admin";
+import { isValidBookId, normalizeBookId } from "@/lib/ids";
 import { limitByIp } from "@/lib/rate-limit";
+import { getBanErrorMessage } from "@/lib/user-moderation";
 
 export const runtime = "nodejs";
-
-const BOOK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 function normalizeText(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") {
@@ -21,7 +21,7 @@ function normalizeText(value: unknown, maxLength: number): string | null {
 
 export async function POST(request: Request) {
   try {
-    const rateLimit = limitByIp(request, "reviews-create", 40, 60_000);
+    const rateLimit = await limitByIp(request, "reviews-create", 40, 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many requests" },
@@ -44,13 +44,19 @@ export async function POST(request: Request) {
 
     const idToken = await firebaseAdmin.auth().verifyIdToken(token);
     const userId = idToken.uid;
+    const db = firebaseAdmin.firestore();
+    const banMessage = await getBanErrorMessage(db, userId);
+
+    if (banMessage) {
+      return NextResponse.json({ error: banMessage }, { status: 403 });
+    }
 
     const body = await request.json().catch(() => null);
     const rawBookId = typeof body?.bookId === "string" ? body.bookId : "";
-    const bookId = rawBookId.replace(/^\/?works\//i, "").trim();
+    const bookId = normalizeBookId(rawBookId);
     const rating = Number(body?.rating);
 
-    if (!BOOK_ID_PATTERN.test(bookId)) {
+    if (!isValidBookId(bookId)) {
       return NextResponse.json({ error: "Invalid book id" }, { status: 400 });
     }
 
@@ -62,7 +68,6 @@ export async function POST(request: Request) {
     const comment = normalizeText(body?.comment, 2000);
     const bookName = normalizeText(body?.bookName, 255);
 
-    const db = firebaseAdmin.firestore();
     const reviewRef = db.collection("reviews").doc();
     const aggRef = db.collection("bookAvgRating").doc(bookId);
 

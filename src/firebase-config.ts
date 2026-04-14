@@ -1,6 +1,7 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import {
   getAuth,
+  onIdTokenChanged,
   onAuthStateChanged,
   signOut,
   type Auth,
@@ -111,6 +112,29 @@ export function subscribeToAuthChanges(callback: (user: User | null) => void) {
   }
 }
 
+export function subscribeToIdTokenChanges(
+  callback: (user: User | null) => void,
+) {
+  if (typeof window === "undefined") {
+    callback(null);
+    return () => {};
+  }
+
+  if (!hasFirebaseClientConfig()) {
+    callback(null);
+    return () => {};
+  }
+
+  try {
+    const { auth } = getFirebaseClientState();
+    return onIdTokenChanged(auth, callback);
+  } catch (error) {
+    console.error("Failed to initialize Firebase token listener", error);
+    callback(null);
+    return () => {};
+  }
+}
+
 export function getClientAuth() {
   return getFirebaseClientState().auth;
 }
@@ -129,4 +153,8 @@ export async function logoutCurrentUser() {
   }
 
   await signOut(getFirebaseClientState().auth);
+  await fetch("/api/auth/session", {
+    method: "DELETE",
+    credentials: "include",
+  }).catch(() => null);
 }

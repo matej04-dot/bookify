@@ -12,7 +12,7 @@ export function getFirebaseAdmin() {
   if (!privateKey || !projectId || !clientEmail) {
     throw new Error(
       "Firebase Admin environment variables are not configured. " +
-        "Please set FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID, and FIREBASE_CLIENT_EMAIL."
+        "Please set FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID, and FIREBASE_CLIENT_EMAIL.",
     );
   }
 
@@ -36,7 +36,14 @@ export function getBearerToken(request: Request): string | null {
     }
   }
 
-  // Fallback headers for environments where Authorization can be stripped.
+  const allowLegacyTokenHeaders =
+    process.env.ALLOW_LEGACY_TOKEN_HEADERS === "true";
+
+  if (!allowLegacyTokenHeaders) {
+    return null;
+  }
+
+  // Legacy fallback headers are disabled by default and only enabled via env flag.
   const fallbackHeader =
     request.headers.get("x-firebase-auth") ||
     request.headers.get("x-admin-token") ||
@@ -47,9 +54,7 @@ export function getBearerToken(request: Request): string | null {
   }
 
   if (fallbackHeader.startsWith("Bearer ")) {
-    const fallbackBearerToken = fallbackHeader
-      .slice("Bearer ".length)
-      .trim();
+    const fallbackBearerToken = fallbackHeader.slice("Bearer ".length).trim();
     return fallbackBearerToken.length > 0 ? fallbackBearerToken : null;
   }
 

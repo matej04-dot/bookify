@@ -61,6 +61,28 @@ const Login: React.FC = () => {
 
   const safeRedirectPath = getSafeRedirectPath(from);
 
+  const syncServerSessionFromCurrentUser = async () => {
+    const auth = getClientAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    const idToken = await user.getIdToken().catch(() => null);
+    if (!idToken) {
+      return;
+    }
+
+    await fetch("/api/auth/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ idToken }),
+    }).catch(() => null);
+  };
+
   const getMissingConfigMessage = () => {
     const missing = getMissingFirebaseClientConfigFields();
     if (missing.length === 0) {
@@ -100,6 +122,7 @@ const Login: React.FC = () => {
         } catch {}
       }
 
+      await syncServerSessionFromCurrentUser();
       router.replace(safeRedirectPath);
     } catch (err: any) {
       setError(toUserAuthError(err));
@@ -137,6 +160,8 @@ const Login: React.FC = () => {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
+
+      await syncServerSessionFromCurrentUser();
       router.replace(safeRedirectPath);
     } catch (err: any) {
       setError(toUserAuthError(err));

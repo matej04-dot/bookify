@@ -73,14 +73,17 @@ export async function updateReview(
   if (!reviewId) throw new Error("Missing reviewId");
 
   const idToken = await getIdTokenOrThrow();
-  const response = await fetch(`/api/reviews/${encodeURIComponent(reviewId)}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`,
+  const response = await fetch(
+    `/api/reviews/review/${encodeURIComponent(reviewId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify(params),
     },
-    body: JSON.stringify(params),
-  });
+  );
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));

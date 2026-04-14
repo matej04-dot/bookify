@@ -39,8 +39,11 @@ export type AdminStatsItem = {
 
 export interface AdminDashboardStats {
   totalReviews: number | null;
-  globalAverageRating: number | null;
   reviewsLast24h: number | null;
+  reviewsLast7d?: number | null;
+  totalUsers?: number | null;
+  totalWishlistItems?: number | null;
+  activeUsers30d?: number | null;
   topBooksByReviewCount: AdminStatsItem[];
   topUsersByReviewCount: AdminStatsItem[];
 }
