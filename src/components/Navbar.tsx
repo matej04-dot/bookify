@@ -3,6 +3,7 @@
 import Search from "./Search";
 import NavbarUser from "./NavbarUser";
 import { useEffect, useLayoutEffect, useState } from "react";
+import { Suspense } from "react";
 import { subscribeToAuthChanges } from "../firebase-config";
 import Link from "next/link";
 
@@ -55,7 +56,9 @@ export default function Navbar() {
 
           {/* Search Bar - Desktop */}
           <div className="flex-1 max-w-2xl mx-8">
-            <Search />
+            <Suspense fallback={<div className="h-[74px]" />}>
+              <Search />
+            </Suspense>
           </div>
 
           {/* User Actions */}
@@ -133,7 +136,9 @@ export default function Navbar() {
 
           {/* Mobile Search Bar */}
           <div className="pb-3">
-            <Search />
+            <Suspense fallback={<div className="h-[74px]" />}>
+              <Search />
+            </Suspense>
           </div>
         </div>
       </div>

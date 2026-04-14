@@ -12,6 +12,9 @@ type BookProps = {
     authors?: { name: string }[];
     cover_edition_key?: string;
     key: string;
+    ratingAverage?: number | null;
+    ratingReviewCount?: number | null;
+    ratingResolved?: boolean;
   };
 };
 
@@ -19,11 +22,18 @@ const BookCardMedium = ({ book }: BookProps) => {
   const fixedCoverFrameClass = "h-[200px] w-[136px]";
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
   const [erroredUrl, setErroredUrl] = useState<string | null>(null);
+  const hasPrefetchedRating = book.ratingResolved === true;
   const {
     loading: avgLoading,
     average,
     reviewCount,
-  } = useBookAverageRating(book.key);
+  } = useBookAverageRating(book.key, {
+    enabled: !hasPrefetchedRating,
+    initialAverage: hasPrefetchedRating ? (book.ratingAverage ?? null) : null,
+    initialReviewCount: hasPrefetchedRating
+      ? (book.ratingReviewCount ?? null)
+      : null,
+  });
   const coverUrl =
     book.cover_edition_key &&
     `${imagesBaseUrl}/b/olid/${book.cover_edition_key}-M.jpg`;

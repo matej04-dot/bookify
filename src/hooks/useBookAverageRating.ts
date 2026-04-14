@@ -8,14 +8,33 @@ type UseBookAverageRatingResult = {
   reviewCount: number | null;
 };
 
+type UseBookAverageRatingOptions = {
+  enabled?: boolean;
+  initialAverage?: number | null;
+  initialReviewCount?: number | null;
+};
+
 export function useBookAverageRating(
   bookKey?: string,
+  options: UseBookAverageRatingOptions = {},
 ): UseBookAverageRatingResult {
+  const {
+    enabled = true,
+    initialAverage = null,
+    initialReviewCount = null,
+  } = options;
   const [loading, setLoading] = useState(false);
-  const [average, setAverage] = useState<number | null>(null);
-  const [reviewCount, setReviewCount] = useState<number | null>(null);
+  const [average, setAverage] = useState<number | null>(initialAverage);
+  const [reviewCount, setReviewCount] = useState<number | null>(
+    initialReviewCount,
+  );
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     const fetchAverage = async () => {
@@ -67,7 +86,7 @@ export function useBookAverageRating(
     return () => {
       mounted = false;
     };
-  }, [bookKey]);
+  }, [bookKey, enabled]);
 
   return { loading, average, reviewCount };
 }

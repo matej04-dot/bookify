@@ -200,7 +200,12 @@ export default function BookDetails({
             Reviews
           </h2>
         </div>
-        <BookDetailsClient bookKey={bookKey} bookName={bookData.title} />
+        <BookDetailsClient
+          bookKey={bookKey}
+          bookName={bookData.title}
+          authors={authors.map((author) => author.name ?? "").filter(Boolean)}
+          coverEditionKey={coverId ? String(coverId) : null}
+        />
         <ReviewsList bookId={bookKey.replace(/^\/?works\//i, "")} />
       </div>
     </>

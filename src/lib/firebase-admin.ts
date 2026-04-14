@@ -29,10 +29,30 @@ export function getFirebaseAdmin() {
 
 export function getBearerToken(request: Request): string | null {
   const authHeader = request.headers.get("authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
+  if (authHeader.startsWith("Bearer ")) {
+    const bearerToken = authHeader.slice("Bearer ".length).trim();
+    if (bearerToken.length > 0) {
+      return bearerToken;
+    }
+  }
+
+  // Fallback headers for environments where Authorization can be stripped.
+  const fallbackHeader =
+    request.headers.get("x-firebase-auth") ||
+    request.headers.get("x-admin-token") ||
+    "";
+
+  if (!fallbackHeader) {
     return null;
   }
 
-  const token = authHeader.slice("Bearer ".length).trim();
-  return token.length > 0 ? token : null;
+  if (fallbackHeader.startsWith("Bearer ")) {
+    const fallbackBearerToken = fallbackHeader
+      .slice("Bearer ".length)
+      .trim();
+    return fallbackBearerToken.length > 0 ? fallbackBearerToken : null;
+  }
+
+  const rawToken = fallbackHeader.trim();
+  return rawToken.length > 0 ? rawToken : null;
 }

@@ -1,9 +1,6 @@
 import BookCategoryServer from "@/components/BookCategoryServer";
 
-// Mark as dynamic to skip prerendering - contains client-side navigation components
-export const dynamic = "force-dynamic";
-
-// ISR za home page - često posjećena stranica
+// ISR for home page
 export const revalidate = 3600; // 1 sat
 
 // Metadata

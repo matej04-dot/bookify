@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getClientDb, subscribeToAuthChanges } from "../firebase-config";
+import {
+  getClientAuth,
+  getClientDb,
+  subscribeToAuthChanges,
+} from "../firebase-config";
 import {
   collection,
   query,
@@ -28,6 +32,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (user) => {
@@ -103,6 +108,47 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
 
     return () => unsub();
   }, [userId, authLoading, isAdmin]);
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!isAdmin || !reviewId) {
+      return;
+    }
+
+    const confirmed = confirm("Delete this review permanently?");
+    if (!confirmed) {
+      return;
+    }
+
+    const authUser = getClientAuth().currentUser;
+    if (!authUser) {
+      alert("You must be logged in as admin.");
+      return;
+    }
+
+    try {
+      setDeletingReviewId(reviewId);
+      const idToken = await authUser.getIdToken();
+
+      const response = await fetch(
+        `/api/admin/reviews/${encodeURIComponent(reviewId)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || "Failed to delete review");
+      }
+    } catch {
+      alert("Failed to delete review.");
+    } finally {
+      setDeletingReviewId(null);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -318,37 +364,61 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                         <ReviewItem review={review} />
                       </div>
 
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/bookDetails/${encodeURIComponent(
-                              review.bookId ?? "",
-                            )}`,
-                          )
-                        }
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary px-4 py-2.5 font-semibold text-primary-foreground transition hover:bg-primary/90"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/bookDetails/${encodeURIComponent(
+                                review.bookId ?? "",
+                              )}`,
+                            )
+                          }
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary px-4 py-2.5 font-semibold text-primary-foreground transition hover:bg-primary/90"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                        View Book
-                      </button>
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          View Book
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReview(review.id)}
+                          disabled={deletingReviewId === review.id}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-300/80 bg-red-50 px-4 py-2.5 font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0h8a1 1 0 001-1V5a1 1 0 00-1-1H8a1 1 0 00-1 1v1a1 1 0 001 1z"
+                            />
+                          </svg>
+                          {deletingReviewId === review.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

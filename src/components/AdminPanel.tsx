@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
-  getClientAuth,
   getClientDb,
   subscribeToAuthChanges,
 } from "../firebase-config";
@@ -18,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { Spinner } from "./ui/spinner";
+import type { AdminDashboardStats } from "../types/Types";
 
 type UserDoc = {
   id: string;
@@ -88,13 +88,123 @@ const InitialsAvatar = ({
   );
 };
 
+type TopStatItem = {
+  key: string;
+  label: string;
+  reviewCount: number;
+};
+
+type ReviewAggregate = {
+  createdAtMs: number;
+  rating: number | null;
+  bookId: string;
+  bookLabel: string;
+  userId: string;
+  userLabel: string;
+};
+
+const toTimestampMs = (value: unknown): number => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (value instanceof Date) {
+    const ms = value.getTime();
+    return Number.isFinite(ms) ? ms : 0;
+  }
+
+  if (value && typeof value === "object") {
+    const timestampLike = value as {
+      toMillis?: () => unknown;
+      toDate?: () => unknown;
+    };
+
+    if (typeof timestampLike.toMillis === "function") {
+      const ms = Number(timestampLike.toMillis());
+      if (Number.isFinite(ms)) {
+        return ms;
+      }
+    }
+
+    if (typeof timestampLike.toDate === "function") {
+      const dateValue = timestampLike.toDate();
+      if (dateValue instanceof Date) {
+        const ms = dateValue.getTime();
+        if (Number.isFinite(ms)) {
+          return ms;
+        }
+      }
+    }
+  }
+
+  return 0;
+};
+
+const topFive = (input: Map<string, TopStatItem>): TopStatItem[] =>
+  Array.from(input.values())
+    .sort((a, b) => {
+      if (b.reviewCount !== a.reviewCount) {
+        return b.reviewCount - a.reviewCount;
+      }
+
+      return a.label.localeCompare(b.label);
+    })
+    .slice(0, 5);
+
+const toReviewAggregate = (data: Record<string, unknown>): ReviewAggregate => {
+  const bookId = typeof data.bookId === "string" ? data.bookId.trim() : "";
+  const userId = typeof data.userId === "string" ? data.userId.trim() : "";
+
+  return {
+    createdAtMs: toTimestampMs(data.createdAt),
+    rating: Number.isFinite(Number(data.rating)) ? Number(data.rating) : null,
+    bookId,
+    bookLabel:
+      typeof data.bookName === "string" && data.bookName.trim().length > 0
+        ? data.bookName.trim()
+        : bookId,
+    userId,
+    userLabel:
+      typeof data.username === "string" && data.username.trim().length > 0
+        ? data.username.trim()
+        : userId,
+  };
+};
+
+const applyCountDelta = (
+  target: Map<string, TopStatItem>,
+  key: string,
+  label: string,
+  delta: number,
+) => {
+  if (!key || delta === 0) {
+    return;
+  }
+
+  const existing = target.get(key);
+  const nextCount = (existing?.reviewCount ?? 0) + delta;
+
+  if (nextCount <= 0) {
+    target.delete(key);
+    return;
+  }
+
+  target.set(key, {
+    key,
+    label: label || existing?.label || key,
+    reviewCount: nextCount,
+  });
+};
+
 function AdminPanel() {
   const [users, setUsers] = useState<UserDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [promotingUserId, setPromotingUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -102,6 +212,8 @@ function AdminPanel() {
     const unsub = subscribeToAuthChanges(async (user) => {
       if (!user?.uid) {
         setIsAdmin(false);
+        setStats(null);
+        setStatsError(null);
         setAuthLoading(false);
         return;
       }
@@ -158,50 +270,117 @@ function AdminPanel() {
     return () => unsub();
   }, [authLoading, isAdmin]);
 
-  const promoteToAdmin = async (userId: string) => {
-    if (!isAdmin) return;
-    if (!userId) return;
-    const ok = confirm("Promote this user to admin?");
-    if (!ok) return;
-
-    const authUser = getClientAuth().currentUser;
-    if (!authUser) {
-      alert("You must be logged in as admin.");
+  useEffect(() => {
+    if (authLoading || !isAdmin) {
+      setStats(null);
+      setStatsLoading(false);
       return;
     }
 
-    try {
-      setPromotingUserId(userId);
-      const idToken = await authUser.getIdToken();
+    setStatsLoading(true);
+    setStatsError(null);
 
-      const response = await fetch(
-        `/api/admin/users/${encodeURIComponent(userId)}/promote`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-          },
-        },
-      );
+    const db = getClientDb();
+    const reviewsQuery = query(collection(db, "reviews"));
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.error || "Failed to promote user");
+    const reviewIndex = new Map<string, ReviewAggregate>();
+    const bookCounts = new Map<string, TopStatItem>();
+    const userCounts = new Map<string, TopStatItem>();
+
+    let ratingTotal = 0;
+    let ratingCount = 0;
+
+    const attachReview = (reviewId: string, entry: ReviewAggregate) => {
+      reviewIndex.set(reviewId, entry);
+
+      if (entry.rating !== null) {
+        ratingTotal += entry.rating;
+        ratingCount += 1;
       }
 
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, role: "admin" } : u)),
-      );
-    } catch {
-      alert("Failed to promote user.");
-    } finally {
-      setPromotingUserId(null);
-    }
-  };
+      applyCountDelta(bookCounts, entry.bookId, entry.bookLabel, 1);
+      applyCountDelta(userCounts, entry.userId, entry.userLabel, 1);
+    };
+
+    const detachReview = (reviewId: string) => {
+      const existing = reviewIndex.get(reviewId);
+      if (!existing) {
+        return;
+      }
+
+      reviewIndex.delete(reviewId);
+
+      if (existing.rating !== null) {
+        ratingTotal -= existing.rating;
+        ratingCount = Math.max(ratingCount - 1, 0);
+      }
+
+      applyCountDelta(bookCounts, existing.bookId, existing.bookLabel, -1);
+      applyCountDelta(userCounts, existing.userId, existing.userLabel, -1);
+    };
+
+    const publishStats = () => {
+      const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      let reviewsLast24h = 0;
+
+      for (const entry of reviewIndex.values()) {
+        if (entry.createdAtMs >= dayAgo) {
+          reviewsLast24h += 1;
+        }
+      }
+
+      setStats({
+        totalReviews: reviewIndex.size,
+        globalAverageRating:
+          ratingCount > 0
+            ? Math.round((ratingTotal / ratingCount) * 10) / 10
+            : null,
+        reviewsLast24h,
+        topBooksByReviewCount: topFive(bookCounts),
+        topUsersByReviewCount: topFive(userCounts),
+      });
+    };
+
+    const unsub = onSnapshot(
+      reviewsQuery,
+      (snap) => {
+        snap.docChanges().forEach((change) => {
+          const reviewId = change.doc.id;
+
+          if (change.type === "removed") {
+            detachReview(reviewId);
+            return;
+          }
+
+          const nextEntry = toReviewAggregate(
+            change.doc.data() as Record<string, unknown>,
+          );
+
+          if (change.type === "modified") {
+            detachReview(reviewId);
+          }
+
+          attachReview(reviewId, nextEntry);
+        });
+
+        publishStats();
+        setStatsLoading(false);
+      },
+      () => {
+        setStatsError("Failed to load live statistics from Firestore.");
+        setStatsLoading(false);
+      },
+    );
+
+    return () => {
+      unsub();
+    };
+  }, [authLoading, isAdmin]);
 
   const viewDetails = (userId: string) => {
-    if (!isAdmin) return;
-    if (!userId) return;
+    if (!isAdmin || !userId) {
+      return;
+    }
     router.push(`/admin/users/${encodeURIComponent(userId)}`);
   };
 
@@ -247,7 +426,7 @@ function AdminPanel() {
                   Admin Panel
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Manage users and permissions
+                  Manage users, reviews and platform insights
                 </p>
               </div>
             </div>
@@ -272,27 +451,169 @@ function AdminPanel() {
             </button>
           </div>
 
-          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-primary">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
-              <span className="font-semibold">Total Users:</span>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-primary">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+                <span className="font-semibold">Total Users:</span>
+              </div>
+              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+                {users.length}
+              </div>
             </div>
-            <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-              {users.length}
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-primary">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span className="font-semibold">Total Reviews:</span>
+              </div>
+              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+                {stats?.totalReviews ?? "—"}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-primary">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.95a1 1 0 00.95.69h4.153c.969 0 1.371 1.24.588 1.81l-3.36 2.441a1 1 0 00-.364 1.118l1.285 3.95c.3.922-.755 1.688-1.538 1.118l-3.36-2.441a1 1 0 00-1.175 0l-3.36 2.441c-.783.57-1.838-.196-1.539-1.118l1.286-3.95a1 1 0 00-.364-1.118L2.22 9.377c-.783-.57-.38-1.81.588-1.81h4.153a1 1 0 00.951-.69l1.286-3.95z"
+                  />
+                </svg>
+                <span className="font-semibold">Global Average:</span>
+              </div>
+              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+                {typeof stats?.globalAverageRating === "number"
+                  ? stats.globalAverageRating.toFixed(1)
+                  : "—"}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-primary">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="font-semibold">Reviews (24h):</span>
+              </div>
+              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+                {stats?.reviewsLast24h ?? "—"}
+              </div>
             </div>
           </div>
+
+          {statsLoading && (
+            <div className="mt-4 flex items-center justify-center rounded-2xl border border-border bg-card p-4">
+              <Spinner label="Loading statistics..." />
+            </div>
+          )}
+
+          {statsError && (
+            <div className="mt-4 rounded-2xl border border-red-300/60 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              <span>{statsError}</span>
+            </div>
+          )}
+
+          {!statsLoading && !statsError && stats && (
+            <div className="mt-4">
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <h3 className="mb-4 text-base font-semibold text-foreground">
+                    Top 5 Books by Reviews
+                  </h3>
+                  {stats.topBooksByReviewCount.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No review data yet.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {stats.topBooksByReviewCount.map((item) => (
+                        <li
+                          key={item.key}
+                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                        >
+                          <span className="truncate pr-3 text-sm font-medium text-foreground">
+                            {item.label}
+                          </span>
+                          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
+                            {item.reviewCount}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <h3 className="mb-4 text-base font-semibold text-foreground">
+                    Top 5 Users by Reviews
+                  </h3>
+                  {stats.topUsersByReviewCount.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No review data yet.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {stats.topUsersByReviewCount.map((item) => (
+                        <li
+                          key={item.key}
+                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                        >
+                          <span className="truncate pr-3 text-sm font-medium text-foreground">
+                            {item.label}
+                          </span>
+                          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
+                            {item.reviewCount}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {loading && (
@@ -400,25 +721,12 @@ function AdminPanel() {
                         : "—"}
                     </div>
 
-                    <div className="flex gap-2 border-t border-border pt-3">
+                    <div className="border-t border-border pt-3">
                       <button
-                        className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+                        className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
                         onClick={() => viewDetails(u.id)}
                       >
                         View Details
-                      </button>
-                      <button
-                        className="flex-1 rounded-lg border border-primary/20 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                        onClick={() => promoteToAdmin(u.id)}
-                        disabled={
-                          promotingUserId === u.id || u.role === "admin"
-                        }
-                      >
-                        {u.role === "admin"
-                          ? "Admin"
-                          : promotingUserId === u.id
-                            ? "Promoting..."
-                            : "Promote"}
                       </button>
                     </div>
                   </div>
@@ -517,25 +825,12 @@ function AdminPanel() {
                           : "—"}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 min-w-[244px]">
+                        <div className="flex items-center justify-end min-w-[112px]">
                           <button
                             className="h-10 min-w-[112px] whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
                             onClick={() => viewDetails(u.id)}
                           >
                             Details
-                          </button>
-                          <button
-                            className="h-10 min-w-[112px] whitespace-nowrap rounded-lg border border-primary/20 bg-primary px-3 py-2 text-center text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                            onClick={() => promoteToAdmin(u.id)}
-                            disabled={
-                              promotingUserId === u.id || u.role === "admin"
-                            }
-                          >
-                            {u.role === "admin"
-                              ? "Admin"
-                              : promotingUserId === u.id
-                                ? "Promoting..."
-                                : "Promote"}
                           </button>
                         </div>
                       </td>

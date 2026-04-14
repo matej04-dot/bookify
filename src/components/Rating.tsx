@@ -15,7 +15,7 @@ const StarRating = ({
   className = "",
   readOnly = false,
 }: StarRatingProps) => {
-  const displayValue = Math.round(value);
+  const displayValue = value;
 
   return (
     <Rating
