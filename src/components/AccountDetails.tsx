@@ -24,6 +24,19 @@ import { EmptyState } from "./ui/empty-state";
 import { imagesBaseUrl } from "@/utils/Constants";
 import type { WishlistItem } from "@/types/Types";
 import { getWishlistItems, removeWishlistItem } from "@/services/wishlist";
+import {
+  Bookmark,
+  BookOpen,
+  CalendarDays,
+  ExternalLink,
+  Home,
+  LogOut,
+  Mail,
+  Plus,
+  Settings,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
 
 const getInitials = (value: string) => {
   const base = value.includes("@") ? value.split("@")[0] : value;
@@ -267,461 +280,396 @@ export default function AccountDetails() {
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
     userLabel,
   )}&background=eff6ff&color=0f172a&size=256`;
+  const displayName = authUser.displayName ?? profile?.displayName ?? userLabel;
+  const email = authUser.email ?? profile?.email ?? "-";
+  const role = profile?.role ?? "user";
+  const lastLoginLabel = profile?.lastLogin
+    ? profile.lastLogin.toDate().toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "-";
+  const statCards = [
+    {
+      label: "Reviews",
+      value: userReviews.length,
+      icon: Star,
+      tone: "bg-amber-50 text-amber-700 border-amber-200/70",
+    },
+    {
+      label: "Wishlist",
+      value: wishlistItems.length,
+      icon: Bookmark,
+      tone: "bg-primary/10 text-primary border-primary/20",
+    },
+    {
+      label: "Role",
+      value: role,
+      icon: ShieldCheck,
+      tone: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(1000px_500px_at_10%_-10%,rgba(14,116,144,0.10),transparent),radial-gradient(800px_500px_at_90%_-20%,rgba(59,130,246,0.10),transparent)] bg-background py-6 sm:py-10">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <header className="mb-6 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="mt-1 h-12 w-1.5 rounded-full bg-primary"></div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
-                  Personal Dashboard
-                </p>
-                <h1 className="mt-1 text-2xl font-semibold text-foreground sm:text-3xl lg:text-4xl">
-                  My Account
+    <div className="min-h-screen bg-background py-5 sm:py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+        <header className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="w-fit rounded-lg border border-border bg-background p-1.5 shadow-sm">
+                {avatarLoadFailed ? (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-md bg-primary text-2xl font-semibold text-primary-foreground sm:h-24 sm:w-24">
+                    {userInitials}
+                  </div>
+                ) : (
+                  <Image
+                    src={avatarUrl}
+                    alt={authUser.displayName ?? "User avatar"}
+                    width={96}
+                    height={96}
+                    unoptimized
+                    onError={() => setAvatarLoadFailed(true)}
+                    className="h-20 w-20 rounded-md object-cover sm:h-24 sm:w-24"
+                  />
+                )}
+              </div>
+
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                    Account
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-semibold capitalize text-muted-foreground">
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    {role}
+                  </span>
+                </div>
+                <h1 className="truncate text-2xl font-semibold text-foreground sm:text-4xl">
+                  {displayName}
                 </h1>
-                <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                  Manage your profile, reviews and wishlist in one place.
+                <p className="mt-2 flex min-w-0 items-center gap-2 truncate text-sm text-muted-foreground sm:text-base">
+                  <Mail className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                  <span className="truncate">{email}</span>
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => router.push("/")}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/40 hover:text-primary"
-            >
-              <svg
-                aria-hidden="true"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end lg:max-w-sm">
+              <button
+                onClick={() => router.push("/")}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground shadow-sm transition hover:border-primary/40 hover:bg-accent"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              <span>Home</span>
-            </button>
+                <Home className="h-4 w-4" aria-hidden="true" />
+                Home
+              </button>
+              {profile?.role === "admin" && (
+                <button
+                  onClick={() => router.push("/admin")}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/20"
+                >
+                  <Settings className="h-4 w-4" aria-hidden="true" />
+                  Admin
+                </button>
+              )}
+              <button
+                onClick={handleClick}
+                className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-red-300/60 bg-red-50 px-4 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-100 sm:col-span-1"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                Sign Out
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-2 border-t border-border bg-muted/20 p-3 sm:grid-cols-3 sm:p-4">
+            {statCards.map(({ label, value, icon: Icon, tone }) => (
+              <div
+                key={label}
+                className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {label}
+                    </p>
+                    <p className="mt-1 truncate text-xl font-semibold capitalize text-foreground">
+                      {value}
+                    </p>
+                  </div>
+                  <div className={`rounded-lg border p-1.5 ${tone}`}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </header>
 
-        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-[0_10px_35px_-20px_rgba(15,23,42,0.55)] backdrop-blur">
-          <div className="flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-start">
-            <aside className="w-full lg:sticky lg:top-6 lg:w-80 xl:w-96">
-              <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-muted/40 to-card p-5 shadow-sm">
-                <div className="mb-5 flex flex-col items-center sm:items-start">
-                  <div className="mb-4 rounded-2xl border border-border/80 bg-background/80 p-2">
-                    {avatarLoadFailed ? (
-                      <div className="flex h-28 w-28 items-center justify-center rounded-xl border border-border bg-primary/90 text-2xl font-bold text-primary-foreground sm:h-32 sm:w-32">
-                        {userInitials}
-                      </div>
-                    ) : (
-                      <Image
-                        src={avatarUrl}
-                        alt={authUser.displayName ?? "User avatar"}
-                        width={128}
-                        height={128}
-                        unoptimized
-                        onError={() => setAvatarLoadFailed(true)}
-                        className="h-28 w-28 rounded-xl object-cover sm:h-32 sm:w-32"
-                      />
-                    )}
-                  </div>
+        <main className="min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-border bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                Account Activity
+              </p>
+              <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
+                <h2 className="text-base font-semibold text-foreground">
+                  Last Login
+                </h2>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  {lastLoginLabel}
+                </p>
+              </div>
+            </div>
+            <div
+              className="flex gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-50"
+              role="tablist"
+              aria-label="Account sections"
+            >
+              <button
+                role="tab"
+                aria-selected={activeTab === "reviews"}
+                aria-controls="account-tab-reviews"
+                id="account-tab-trigger-reviews"
+                className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                  activeTab === "reviews"
+                    ? "border-primary/40 bg-card text-primary shadow-sm"
+                    : "border-transparent bg-transparent text-muted-foreground hover:bg-card hover:text-foreground"
+                }`}
+                onClick={() => setActiveTab("reviews")}
+              >
+                <Star className="h-4 w-4" aria-hidden="true" />
+                Reviews
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
+                  {userReviews.length}
+                </span>
+              </button>
 
-                  <div className="w-full text-center sm:text-left">
-                    <h2 className="mb-1 break-words text-2xl font-semibold text-foreground sm:text-3xl">
-                      {authUser.displayName ?? profile?.displayName ?? "-"}
+              <button
+                role="tab"
+                aria-selected={activeTab === "wishlist"}
+                aria-controls="account-tab-wishlist"
+                id="account-tab-trigger-wishlist"
+                className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                  activeTab === "wishlist"
+                    ? "border-primary/40 bg-card text-primary shadow-sm"
+                    : "border-transparent bg-transparent text-muted-foreground hover:bg-card hover:text-foreground"
+                }`}
+                onClick={() => setActiveTab("wishlist")}
+              >
+                <Bookmark className="h-4 w-4" aria-hidden="true" />
+                Wishlist
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
+                  {wishlistItems.length}
+                </span>
+              </button>
+            </div>
+          </div>
+
+            {activeTab === "reviews" && (
+              <section
+                id="account-tab-reviews"
+                role="tabpanel"
+                aria-labelledby="account-tab-trigger-reviews"
+                className="p-4 sm:p-5 lg:p-4"
+              >
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-foreground">
+                      Your Reviews
                     </h2>
-                    <p className="break-words text-sm text-muted-foreground">
-                      {authUser.email ?? profile?.email ?? "-"}
+                    <p className="text-sm text-muted-foreground">
+                      Helpful insights from your reads.
                     </p>
                   </div>
+                  <span className="inline-flex w-fit rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">
+                    {userReviews.length} total
+                  </span>
                 </div>
 
-                <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                  <div className="rounded-xl border border-border/80 bg-background/70 p-3 text-center sm:text-left">
-                    <div className="text-xs font-semibold uppercase text-muted-foreground">
-                      Reviews
+                {userReviews.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                      <BookOpen className="h-5 w-5" aria-hidden="true" />
                     </div>
-                    <div className="mt-1 text-2xl font-semibold text-foreground">
-                      {userReviews.length}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border/80 bg-background/70 p-3 text-center sm:text-left">
-                    <div className="text-xs font-semibold uppercase text-muted-foreground">
-                      Wishlist
-                    </div>
-                    <div className="mt-1 text-2xl font-semibold text-foreground">
-                      {wishlistItems.length}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border/80 bg-background/70 p-3 text-center sm:text-left">
-                    <div className="text-xs font-semibold uppercase text-muted-foreground">
-                      Role
-                    </div>
-                    <div className="mt-1 text-sm font-semibold text-foreground">
-                      {profile?.role ?? "user"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {profile?.role === "admin" && (
+                    <p className="mb-2 text-lg font-semibold text-foreground">
+                      No reviews yet
+                    </p>
+                    <p className="mb-6 text-sm text-muted-foreground">
+                      Start exploring books and share your thoughts.
+                    </p>
                     <button
-                      onClick={() => router.push("/admin")}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-3 font-semibold text-primary transition hover:bg-primary/20"
+                      onClick={() => router.push("/")}
+                      className="inline-flex h-10 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 text-sm font-semibold text-primary transition hover:bg-primary/20"
                     >
-                      <svg
-                        aria-hidden="true"
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      Admin Panel
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      Browse Books
                     </button>
-                  )}
-                  <button
-                    onClick={handleClick}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-300/50 bg-red-50 px-5 py-3 font-semibold text-red-700 transition hover:bg-red-100"
+                  </div>
+                ) : (
+                  <div
+                    className="max-h-[min(62vh,36rem)] space-y-2 overflow-y-auto rounded-lg border border-border bg-background/40 p-3 pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-50"
+                    aria-label="Scrollable review list"
                   >
-                    <svg
-                      aria-hidden="true"
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            </aside>
+                    {userReviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="group relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3 shadow-sm transition hover:border-primary/40 hover:bg-accent/20"
+                      >
+                        <div className="absolute inset-y-0 left-0 w-1 bg-primary/20 transition group-hover:bg-primary/40" />
+                        <ReviewItem review={review} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
 
-            <main className="flex-1">
-              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border/70 bg-gradient-to-br from-background to-muted/20 p-5">
-                  <div className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
-                    Display Name
-                  </div>
-                  <div className="break-words text-base font-medium text-foreground">
-                    {authUser.displayName ?? profile?.displayName ?? "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-border/70 bg-gradient-to-br from-background to-muted/20 p-5">
-                  <div className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
-                    Last Login
-                  </div>
-                  <div className="text-sm font-medium text-foreground">
-                    {profile?.lastLogin
-                      ? profile.lastLogin.toDate().toLocaleDateString("en-US", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "-"}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="mb-5 flex flex-wrap items-center gap-2 border-b border-border/70 pb-3"
-                role="tablist"
-                aria-label="Account sections"
+            {activeTab === "wishlist" && (
+              <section
+                id="account-tab-wishlist"
+                role="tabpanel"
+                aria-labelledby="account-tab-trigger-wishlist"
+                className="p-4 sm:p-5 lg:p-4"
               >
-                <button
-                  role="tab"
-                  aria-selected={activeTab === "reviews"}
-                  aria-controls="account-tab-reviews"
-                  id="account-tab-trigger-reviews"
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                    activeTab === "reviews"
-                      ? "border-primary/40 bg-primary/15 text-primary shadow-sm"
-                      : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted"
-                  }`}
-                  onClick={() => setActiveTab("reviews")}
-                >
-                  Reviews
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
-                    {userReviews.length}
-                  </span>
-                </button>
-
-                <button
-                  role="tab"
-                  aria-selected={activeTab === "wishlist"}
-                  aria-controls="account-tab-wishlist"
-                  id="account-tab-trigger-wishlist"
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                    activeTab === "wishlist"
-                      ? "border-primary/40 bg-primary/15 text-primary shadow-sm"
-                      : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted"
-                  }`}
-                  onClick={() => setActiveTab("wishlist")}
-                >
-                  Wishlist
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
-                    {wishlistItems.length}
-                  </span>
-                </button>
-              </div>
-
-              {activeTab === "reviews" && (
-                <section
-                  id="account-tab-reviews"
-                  role="tabpanel"
-                  aria-labelledby="account-tab-trigger-reviews"
-                  className="rounded-2xl border border-border/70 bg-card p-5"
-                >
-                  <div className="mb-5 flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-2xl font-semibold text-foreground sm:text-3xl">
-                        Your Reviews
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Helpful insights from your reads.
-                      </p>
-                    </div>
-                    <div className="rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-                      {userReviews.length} total
-                    </div>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-foreground">
+                      Your Wishlist
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Books you saved for later reading.
+                    </p>
                   </div>
+                  <span className="inline-flex w-fit rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">
+                    {wishlistItems.length} saved
+                  </span>
+                </div>
 
-                  {userReviews.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-10 text-center">
+                {wishlistLoading && (
+                  <div className="py-12">
+                    <Spinner label="Loading wishlist..." />
+                  </div>
+                )}
+
+                {!wishlistLoading && wishlistError && (
+                  <div className="rounded-lg border border-red-300/60 bg-red-50 p-4 text-sm font-semibold text-red-700">
+                    {wishlistError}
+                  </div>
+                )}
+
+                {!wishlistLoading &&
+                  !wishlistError &&
+                  wishlistItems.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
+                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                        <Bookmark className="h-5 w-5" aria-hidden="true" />
+                      </div>
                       <p className="mb-2 text-lg font-semibold text-foreground">
-                        No reviews yet
+                        No books saved yet
                       </p>
                       <p className="mb-6 text-sm text-muted-foreground">
-                        Start exploring books and share your thoughts.
+                        Start building your reading list from book details.
                       </p>
                       <button
                         onClick={() => router.push("/")}
-                        className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-6 py-3 font-semibold text-primary transition hover:bg-primary/20"
+                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 text-sm font-semibold text-primary transition hover:bg-primary/20"
                       >
-                        <svg
-                          aria-hidden="true"
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 6v12m6-6H6"
-                          />
-                        </svg>
                         Browse Books
                       </button>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-3">
-                      {userReviews.map((review) => (
-                        <div
-                          key={review.id}
-                          className="group relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-background to-muted/10 p-4 transition hover:border-primary/40 hover:shadow-md"
-                        >
-                          <div className="absolute inset-y-0 left-0 w-1 bg-primary/20 transition group-hover:bg-primary/40" />
-                          <ReviewItem review={review} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )}
-
-              {activeTab === "wishlist" && (
-                <section
-                  id="account-tab-wishlist"
-                  role="tabpanel"
-                  aria-labelledby="account-tab-trigger-wishlist"
-                  className="rounded-2xl border border-border/70 bg-card p-5"
-                >
-                  <div className="mb-5 flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-2xl font-semibold text-foreground sm:text-3xl">
-                        Your Wishlist
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Books you saved for later reading.
-                      </p>
-                    </div>
-                    <div className="rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-                      {wishlistItems.length} saved
-                    </div>
-                  </div>
-
-                  {wishlistLoading && (
-                    <div className="py-12">
-                      <Spinner label="Loading wishlist..." />
-                    </div>
                   )}
 
-                  {!wishlistLoading && wishlistError && (
-                    <div className="rounded-2xl border border-red-300/60 bg-red-50 p-4 text-sm font-semibold text-red-700">
-                      {wishlistError}
-                    </div>
-                  )}
+                {!wishlistLoading &&
+                  !wishlistError &&
+                  wishlistItems.length > 0 && (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {wishlistItems.map((item) => {
+                        const coverUrl = item.coverEditionKey
+                          ? `${imagesBaseUrl}/b/id/${item.coverEditionKey}-M.jpg`
+                          : null;
 
-                  {!wishlistLoading &&
-                    !wishlistError &&
-                    wishlistItems.length === 0 && (
-                      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-10 text-center">
-                        <p className="mb-2 text-lg font-semibold text-foreground">
-                          No books saved yet
-                        </p>
-                        <p className="mb-6 text-sm text-muted-foreground">
-                          Start building your reading list from book details.
-                        </p>
-                        <button
-                          onClick={() => router.push("/")}
-                          className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-6 py-3 font-semibold text-primary transition hover:bg-primary/20"
-                        >
-                          Browse Books
-                        </button>
-                      </div>
-                    )}
-
-                  {!wishlistLoading &&
-                    !wishlistError &&
-                    wishlistItems.length > 0 && (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                        {wishlistItems.map((item) => {
-                          const coverUrl = item.coverEditionKey
-                            ? `${imagesBaseUrl}/b/id/${item.coverEditionKey}-M.jpg`
-                            : null;
-
-                          return (
-                            <div
-                              key={item.id}
-                              className="rounded-2xl border border-border/80 bg-gradient-to-br from-background to-muted/10 p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-                            >
-                              <div className="mb-3 flex flex-col gap-3 sm:flex-row">
-                                <div className="h-44 w-full flex-shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:h-28 sm:w-20">
-                                  {coverUrl ? (
-                                    <Image
-                                      src={coverUrl}
-                                      alt={`${item.bookName} cover`}
-                                      width={160}
-                                      height={176}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                                      No cover
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="min-w-0 flex-1">
-                                  <p className="line-clamp-2 text-sm font-semibold text-foreground sm:text-base">
-                                    {item.bookName || "Unknown book"}
-                                  </p>
-                                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                                    {Array.isArray(item.authors) &&
-                                    item.authors.length > 0
-                                      ? item.authors.join(", ")
-                                      : "Unknown author"}
-                                  </p>
-                                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                                    <svg
-                                      aria-hidden="true"
-                                      className="h-3.5 w-3.5"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                      />
-                                    </svg>
-                                    Added: {toReadableDate(item.addedAt)}
-                                  </p>
-                                </div>
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex min-h-full flex-col rounded-lg border border-border bg-background p-3 shadow-sm transition hover:border-primary/40 hover:bg-accent/20"
+                          >
+                            <div className="flex gap-3">
+                              <div className="h-28 w-20 flex-shrink-0 overflow-hidden rounded-md border border-border bg-muted shadow-sm">
+                                {coverUrl ? (
+                                  <Image
+                                    src={coverUrl}
+                                    alt={`${item.bookName} cover`}
+                                    width={160}
+                                    height={176}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                                    No cover
+                                  </div>
+                                )}
                               </div>
 
-                              <div className="flex flex-col gap-2 border-t border-border/70 pt-3 sm:flex-row">
-                                <button
-                                  onClick={() =>
-                                    router.push(
-                                      `/bookDetails/${encodeURIComponent(item.bookID)}`,
-                                    )
-                                  }
-                                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/15 px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/25"
-                                >
-                                  <svg
+                              <div className="min-w-0 flex-1">
+                                <p className="line-clamp-2 text-sm font-semibold text-foreground">
+                                  {item.bookName || "Unknown book"}
+                                </p>
+                                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                                  {Array.isArray(item.authors) &&
+                                  item.authors.length > 0
+                                    ? item.authors.join(", ")
+                                    : "Unknown author"}
+                                </p>
+                                <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                  <CalendarDays
+                                    className="h-3.5 w-3.5"
                                     aria-hidden="true"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M15 12H9m12 0A9 9 0 113 12a9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  Open Details
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleRemoveWishlist(item.bookID)
-                                  }
-                                  disabled={removingBookID === item.bookID}
-                                  className="inline-flex w-full items-center justify-center rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  {removingBookID === item.bookID
-                                    ? "Removing..."
-                                    : "Remove"}
-                                </button>
+                                  />
+                                  {toReadableDate(item.addedAt)}
+                                </p>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                </section>
-              )}
-            </main>
-          </div>
-        </div>
+
+                            <div className="mt-3 grid gap-2 border-t border-border pt-3">
+                              <button
+                                onClick={() =>
+                                  router.push(
+                                    `/bookDetails/${encodeURIComponent(item.bookID)}`,
+                                  )
+                                }
+                                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 text-sm font-semibold text-primary transition hover:bg-primary/20"
+                              >
+                                <ExternalLink
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                                Open Details
+                              </button>
+                              <button
+                                onClick={() => handleRemoveWishlist(item.bookID)}
+                                disabled={removingBookID === item.bookID}
+                                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <Bookmark
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                                {removingBookID === item.bookID
+                                  ? "Removing..."
+                                  : "Remove"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+              </section>
+            )}
+        </main>
       </div>
     </div>
   );

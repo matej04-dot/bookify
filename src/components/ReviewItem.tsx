@@ -28,10 +28,10 @@ export default function ReviewItem({ review }: { review: Review }) {
     typeof window !== "undefined" && window.location.pathname === "/account";
 
   return (
-    <div className="border-b border-gray-200 py-4 last:border-b-0">
-      <div className="flex items-center gap-3 mb-2">
+    <div className="py-1">
+      <div className="mb-2 flex items-center gap-3">
         {avatarLoadFailed ? (
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex-shrink-0 bg-slate-700 text-white text-xs font-bold flex items-center justify-center">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground sm:h-10 sm:w-10">
             {userInitials}
           </div>
         ) : (
@@ -42,11 +42,11 @@ export default function ReviewItem({ review }: { review: Review }) {
             height={40}
             unoptimized
             onError={() => setAvatarLoadFailed(true)}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
+            className="h-9 w-9 flex-shrink-0 rounded-full sm:h-10 sm:w-10"
           />
         )}
         <div>
-          <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
+          <h4 className="text-sm font-semibold text-foreground sm:text-base">
             {isAccountPage ? review.bookName : review.username}
           </h4>
           <StarRating
@@ -56,9 +56,11 @@ export default function ReviewItem({ review }: { review: Review }) {
           />
         </div>
       </div>
-      <p className="text-gray-700 text-sm sm:text-base leading-relaxed ml-12 sm:ml-13">
-        {review.comment}
-      </p>
+      {review.comment && (
+        <p className="ml-12 text-sm leading-relaxed text-muted-foreground">
+          {review.comment}
+        </p>
+      )}
     </div>
   );
 }

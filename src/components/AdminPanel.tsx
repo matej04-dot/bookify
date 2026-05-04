@@ -17,6 +17,19 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import {
+  Activity,
+  ArrowUpRight,
+  Ban,
+  BarChart3,
+  BookOpen,
+  CalendarDays,
+  Home,
+  Mail,
+  ShieldCheck,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import { Spinner } from "./ui/spinner";
 import type {
   AdminDashboardStats,
@@ -196,7 +209,7 @@ const applyCountDelta = (
 
 const formatCompactNumber = (value: number | null | undefined) => {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return "—";
+    return "-";
   }
 
   return Intl.NumberFormat("en", { notation: "compact" }).format(value);
@@ -542,6 +555,32 @@ function AdminPanel() {
   const totalUsersValue = apiStats?.totalUsers ?? users.length;
   const topBooks = dashboardStats?.topBooksByReviewCount ?? [];
   const topUsers = dashboardStats?.topUsersByReviewCount ?? [];
+  const metricCards = [
+    {
+      label: "Total Users",
+      value: formatCompactNumber(totalUsersValue),
+      icon: Users,
+      tone: "border-primary/20 bg-primary/10 text-primary",
+    },
+    {
+      label: "Active Users (30d)",
+      value: formatCompactNumber(dashboardStats?.activeUsers30d),
+      icon: UserCheck,
+      tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    },
+    {
+      label: "Total Reviews",
+      value: formatCompactNumber(dashboardStats?.totalReviews),
+      icon: BookOpen,
+      tone: "border-amber-200 bg-amber-50 text-amber-700",
+    },
+    {
+      label: "Wishlist Saves",
+      value: formatCompactNumber(dashboardStats?.totalWishlistItems),
+      icon: Activity,
+      tone: "border-sky-200 bg-sky-50 text-sky-700",
+    },
+  ];
 
   if (authLoading) {
     return (
@@ -554,7 +593,10 @@ function AdminPanel() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-xl rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
+        <div className="w-full max-w-xl rounded-lg border border-red-300/60 bg-red-50 p-6 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-red-300/60 bg-white text-red-700">
+            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          </div>
           <h2 className="mb-2 text-2xl font-semibold text-red-800">
             Access denied
           </h2>
@@ -564,7 +606,7 @@ function AdminPanel() {
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="inline-flex items-center justify-center rounded-full border border-red-300/60 bg-white px-5 py-2.5 font-semibold text-red-700 transition hover:bg-red-100"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-red-300/60 bg-white px-5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
           >
             Back to Home
           </button>
@@ -574,14 +616,19 @@ function AdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-1 rounded-full bg-primary/70"></div>
-              <div>
-                <h1 className="text-3xl font-semibold text-foreground md:text-4xl">
+    <div className="min-h-screen bg-background py-5 sm:py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+        <header className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="flex flex-col items-start justify-between gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-primary">
+                <BarChart3 className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                  Admin
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold text-foreground md:text-4xl">
                   Admin Panel
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -591,167 +638,44 @@ function AdminPanel() {
             </div>
             <button
               onClick={() => router.push("/")}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 font-semibold text-foreground transition hover:border-primary/50 hover:text-primary"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground shadow-sm transition hover:border-primary/40 hover:bg-accent sm:w-auto"
             >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
+              <Home className="h-4 w-4" aria-hidden="true" />
               Home
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-primary">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-                <span className="font-semibold">Total Users:</span>
+          <div className="grid gap-3 border-t border-border bg-muted/20 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+            {metricCards.map(({ label, value, icon: Icon, tone }) => (
+              <div
+                key={label}
+                className="rounded-lg border border-border bg-card p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {label}
+                    </p>
+                    <p className="mt-2 truncate text-3xl font-semibold text-foreground">
+                      {value}
+                    </p>
+                  </div>
+                  <div className={`rounded-lg border p-2 ${tone}`}>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                </div>
               </div>
-              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-                {formatCompactNumber(totalUsersValue)}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-emerald-600">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5V4H2v16h5m10 0v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2m12 0H7m10-10a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-                <span className="font-semibold">Active Users (30d):</span>
-              </div>
-              <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800">
-                {formatCompactNumber(dashboardStats?.activeUsers30d)}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-primary">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span className="font-semibold">Total Reviews:</span>
-              </div>
-              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-                {formatCompactNumber(dashboardStats?.totalReviews)}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-primary">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="font-semibold">Reviews (24h):</span>
-              </div>
-              <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
-                {formatCompactNumber(dashboardStats?.reviewsLast24h)}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-cyan-700">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="font-semibold">Review Velocity (7d):</span>
-              </div>
-              <div className="rounded-full bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800">
-                {formatCompactNumber(dashboardStats?.reviewsLast7d)}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-violet-700">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 5a3 3 0 00-3 3v11a1 1 0 001.447.894L12 16l8.553 3.894A1 1 0 0022 19V8a3 3 0 00-3-3H5z"
-                  />
-                </svg>
-                <span className="font-semibold">Wishlist Items:</span>
-              </div>
-              <div className="rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-800">
-                {formatCompactNumber(dashboardStats?.totalWishlistItems)}
-              </div>
-            </div>
+            ))}
           </div>
 
           {statsLoading && !dashboardStats && (
-            <div className="mt-4 flex items-center justify-center rounded-2xl border border-border bg-card p-4">
+            <div className="mx-4 mt-4 flex items-center justify-center rounded-lg border border-border bg-background p-4 sm:mx-5">
               <Spinner label="Loading statistics..." />
             </div>
           )}
 
           {statsError && (
-            <div className="mt-4 rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            <div className="mx-4 mt-4 rounded-lg border border-amber-300/60 bg-amber-50 p-4 text-sm font-semibold text-amber-800 sm:mx-5">
               <span>
                 {statsError} Showing fallback analytics where available.
               </span>
@@ -759,12 +683,17 @@ function AdminPanel() {
           )}
 
           {!statsLoading && dashboardStats && (
-            <div className="mt-6">
+            <div className="border-t border-border p-4 sm:p-5">
               <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                  <h3 className="mb-4 text-base font-semibold text-foreground">
-                    Top 5 Books by Reviews
-                  </h3>
+                <div className="rounded-lg border border-border bg-background p-4 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-amber-700">
+                      <BookOpen className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground">
+                      Top 5 Books by Reviews
+                    </h3>
+                  </div>
                   {topBooks.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No review data yet.
@@ -774,7 +703,7 @@ function AdminPanel() {
                       {topBooks.map((item) => (
                         <li
                           key={item.key}
-                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                          className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
                         >
                           <span className="truncate pr-3 text-sm font-medium text-foreground">
                             {item.label}
@@ -788,10 +717,15 @@ function AdminPanel() {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                  <h3 className="mb-4 text-base font-semibold text-foreground">
-                    Active Reviewers
-                  </h3>
+                <div className="rounded-lg border border-border bg-background p-4 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2">
+                    <div className="rounded-lg border border-primary/20 bg-primary/10 p-2 text-primary">
+                      <Users className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground">
+                      Active Reviewers
+                    </h3>
+                  </div>
                   {topUsers.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No review data yet.
@@ -801,7 +735,7 @@ function AdminPanel() {
                       {topUsers.map((item) => (
                         <li
                           key={item.key}
-                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                          className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
                         >
                           <span className="truncate pr-3 text-sm font-medium text-foreground">
                             {item.label}
@@ -817,7 +751,7 @@ function AdminPanel() {
               </div>
             </div>
           )}
-        </div>
+        </header>
 
         {loading && (
           <div className="flex items-center justify-center py-20">
@@ -826,29 +760,20 @@ function AdminPanel() {
         )}
 
         {error && (
-          <div className="rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
+          <div className="rounded-lg border border-red-300/60 bg-red-50 p-6 text-center shadow-sm">
             <p className="text-red-600 font-semibold">{error}</p>
           </div>
         )}
 
         {!loading && !error && (
-          <div className="space-y-6">
-            <div className="lg:hidden grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+          <div className="space-y-5">
+            <div className="grid gap-3 lg:hidden sm:grid-cols-1 md:grid-cols-2">
               {users.length === 0 && (
-                <div className="col-span-full rounded-2xl border border-dashed border-border bg-muted/20 p-12 text-center">
-                  <svg
-                    className="mx-auto h-16 w-16 text-gray-400 mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
+                <div className="col-span-full rounded-lg border border-dashed border-border bg-muted/20 p-12 text-center">
+                  <Users
+                    className="mx-auto mb-4 h-12 w-12 text-muted-foreground/60"
+                    aria-hidden="true"
+                  />
                   <p className="font-medium text-muted-foreground">
                     No users found
                   </p>
@@ -857,9 +782,9 @@ function AdminPanel() {
               {users.map((u) => (
                 <div
                   key={u.id}
-                  className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-md"
+                  className="overflow-hidden rounded-lg border border-border bg-card shadow-sm transition hover:border-primary/30"
                 >
-                  <div className="border-b border-border bg-muted/40 p-4">
+                  <div className="border-b border-border bg-muted/20 p-4">
                     <div className="flex items-center gap-3">
                       <InitialsAvatar
                         label={u.displayName ?? u.email ?? "User"}
@@ -868,7 +793,7 @@ function AdminPanel() {
                         height={56}
                         background="FFFFFF"
                         color="2563EB"
-                        className="h-14 w-14 rounded-xl border border-border"
+                        className="h-14 w-14 rounded-lg border border-border shadow-sm"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="truncate text-lg font-semibold text-foreground">
@@ -876,16 +801,18 @@ function AdminPanel() {
                         </div>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold capitalize ${
                               u.role === "admin"
                                 ? "border border-amber-300/60 bg-amber-100/80 text-amber-900"
                                 : "border border-border bg-background text-muted-foreground"
                             }`}
                           >
+                            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
                             {u.role ?? "user"}
                           </span>
                           {u.isBanned && (
-                            <span className="inline-flex items-center rounded-full border border-red-300/60 bg-red-100/80 px-2 py-1 text-xs font-semibold text-red-900">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-red-300/60 bg-red-100/80 px-2.5 py-1 text-xs font-semibold text-red-900">
+                              <Ban className="h-3.5 w-3.5" aria-hidden="true" />
                               banned
                             </span>
                           )}
@@ -894,41 +821,23 @@ function AdminPanel() {
                     </div>
                   </div>
 
-                  <div className="p-5 space-y-3">
+                  <div className="space-y-3 p-4">
                     <div className="flex items-start gap-2 break-words text-sm text-muted-foreground">
-                      <svg
-                        className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>{u.email ?? "—"}</span>
+                      <Mail
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary"
+                        aria-hidden="true"
+                      />
+                      <span>{u.email ?? "-"}</span>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <svg
-                        className="w-4 h-4 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                      <CalendarDays
+                        className="h-4 w-4 text-muted-foreground/70"
+                        aria-hidden="true"
+                      />
                       {u.createdAt?.toDate
                         ? u.createdAt.toDate().toLocaleDateString()
-                        : "—"}
+                        : "-"}
                     </div>
 
                     {u.isBanned && u.bannedReason && (
@@ -939,16 +848,17 @@ function AdminPanel() {
 
                     <div className="grid gap-2 border-t border-border pt-3 sm:grid-cols-2">
                       <button
-                        className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+                        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
                         onClick={() => viewDetails(u.id)}
                       >
+                        <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                         View Details
                       </button>
                       <button
                         disabled={
                           moderationActionUserId === u.id || u.id === adminUserId
                         }
-                        className={`w-full rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+                        className={`inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-semibold transition ${
                           u.isBanned
                             ? "border-emerald-300/60 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
                             : "border-red-300/60 bg-red-50 text-red-800 hover:bg-red-100"
@@ -957,6 +867,7 @@ function AdminPanel() {
                           moderateUser(u, u.isBanned ? "unban" : "ban")
                         }
                       >
+                        <Ban className="h-4 w-4" aria-hidden="true" />
                         {moderationActionUserId === u.id
                           ? "Working..."
                           : u.isBanned
@@ -969,9 +880,9 @@ function AdminPanel() {
               ))}
             </div>
 
-            <div className="hidden overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:block">
+            <div className="hidden overflow-hidden rounded-lg border border-border bg-card shadow-sm lg:block">
               <table className="min-w-full">
-                <thead className="bg-muted/50">
+                <thead className="bg-muted/40">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       User
@@ -994,19 +905,10 @@ function AdminPanel() {
                   {users.length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center">
-                        <svg
-                          className="mx-auto h-12 w-12 text-gray-400 mb-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                          />
-                        </svg>
+                        <Users
+                          className="mx-auto mb-3 h-10 w-10 text-muted-foreground/60"
+                          aria-hidden="true"
+                        />
                         <p className="font-medium text-muted-foreground">
                           No users found
                         </p>
@@ -1028,7 +930,7 @@ function AdminPanel() {
                             height={40}
                             background="eff6ff"
                             color="2563eb"
-                            className="h-10 w-10 rounded-lg border border-border"
+                            className="h-10 w-10 rounded-lg border border-border shadow-sm"
                           />
                           <div>
                             <div className="font-semibold text-foreground">
@@ -1041,21 +943,23 @@ function AdminPanel() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {u.email ?? "—"}
+                        {u.email ?? "-"}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold capitalize ${
                               u.role === "admin"
                                 ? "border border-amber-300/60 bg-amber-100/80 text-amber-900"
                                 : "border border-border bg-background text-muted-foreground"
                             }`}
                           >
+                            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
                             {u.role ?? "user"}
                           </span>
                           {u.isBanned && (
-                            <span className="inline-flex items-center rounded-full border border-red-300/60 bg-red-100/80 px-3 py-1 text-xs font-semibold text-red-900">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-red-300/60 bg-red-100/80 px-3 py-1 text-xs font-semibold text-red-900">
+                              <Ban className="h-3.5 w-3.5" aria-hidden="true" />
                               banned
                             </span>
                           )}
@@ -1069,7 +973,7 @@ function AdminPanel() {
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {u.createdAt?.toDate
                           ? u.createdAt.toDate().toLocaleDateString()
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -1078,7 +982,7 @@ function AdminPanel() {
                               moderationActionUserId === u.id ||
                               u.id === adminUserId
                             }
-                            className={`h-10 min-w-[96px] whitespace-nowrap rounded-lg border px-3 py-2 text-center text-sm font-semibold transition ${
+                            className={`inline-flex h-10 min-w-[96px] items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-3 text-sm font-semibold transition ${
                               u.isBanned
                                 ? "border-emerald-300/60 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
                                 : "border-red-300/60 bg-red-50 text-red-800 hover:bg-red-100"
@@ -1087,6 +991,7 @@ function AdminPanel() {
                               moderateUser(u, u.isBanned ? "unban" : "ban")
                             }
                           >
+                            <Ban className="h-4 w-4" aria-hidden="true" />
                             {moderationActionUserId === u.id
                               ? "Working..."
                               : u.isBanned
@@ -1094,9 +999,10 @@ function AdminPanel() {
                                 : "Ban"}
                           </button>
                           <button
-                            className="h-10 min-w-[112px] whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
+                            className="inline-flex h-10 min-w-[112px] items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground transition hover:bg-muted"
                             onClick={() => viewDetails(u.id)}
                           >
+                            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                             Details
                           </button>
                         </div>

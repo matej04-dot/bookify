@@ -20,6 +20,16 @@ import {
 import ReviewItem from "./ReviewItem";
 import type { Review } from "../types/Types";
 import { Spinner } from "./ui/spinner";
+import {
+  ArrowLeft,
+  BookOpen,
+  ClipboardList,
+  Eye,
+  Home,
+  MessageSquare,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 
 interface AdminReviewListProps {
   userId?: string;
@@ -161,7 +171,10 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-xl rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
+        <div className="w-full max-w-xl rounded-lg border border-red-300/60 bg-red-50 p-6 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-red-300/60 bg-white text-red-700">
+            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          </div>
           <h2 className="mb-2 text-2xl font-semibold text-red-800">
             Access denied
           </h2>
@@ -171,7 +184,7 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="inline-flex items-center justify-center rounded-full border border-red-300/60 bg-white px-5 py-2.5 font-semibold text-red-700 transition hover:bg-red-100"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-red-300/60 bg-white px-5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
           >
             Back to Home
           </button>
@@ -181,18 +194,23 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-1 rounded-full bg-primary/70"></div>
-              <div>
-                <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
+    <div className="min-h-screen bg-background py-5 sm:py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+        <header className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-primary">
+                <ClipboardList className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                  Admin
+                </p>
+                <h2 className="mt-1 text-2xl font-semibold text-foreground sm:text-4xl">
                   User Reviews
                 </h2>
                 <p className="mt-1 break-words text-sm text-muted-foreground">
-                  Managing reviews for:{" "}
+                  Managing reviews for{" "}
                   <span className="font-mono text-xs font-semibold text-primary">
                     {userId}
                   </span>
@@ -200,93 +218,49 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 font-semibold text-foreground transition hover:bg-muted"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted"
                 onClick={() => router.push("/admin")}
               >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 Admin
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 font-semibold text-foreground transition hover:border-primary/50 hover:text-primary"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground shadow-sm transition hover:border-primary/40 hover:bg-accent"
                 onClick={() => router.push("/")}
               >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Home</span>
+                <Home className="h-4 w-4" aria-hidden="true" />
+                Home
               </button>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-          <div className="p-6 sm:p-8">
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="p-4 sm:p-5">
             {loading && (
-              <div className="py-16 flex flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-center py-16">
                 <Spinner size="lg" label="Loading reviews..." />
               </div>
             )}
 
             {error && (
-              <div className="mb-6 rounded-2xl border border-red-300/60 bg-red-50 p-6 text-center">
-                <svg
-                  className="mx-auto h-12 w-12 text-red-600 mb-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+              <div className="mb-6 rounded-lg border border-red-300/60 bg-red-50 p-6 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg border border-red-300/60 bg-white text-red-700">
+                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                </div>
                 <p className="font-semibold text-red-700">{error}</p>
               </div>
             )}
 
             {!loading && !error && reviews.length === 0 && (
-              <div className="py-16 flex flex-col items-center justify-center">
-                <svg
-                  className="mx-auto mb-4 h-20 w-20 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                  />
-                </svg>
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground">
+                  <MessageSquare className="h-6 w-6" aria-hidden="true" />
+                </div>
                 <p className="text-lg font-semibold text-foreground">
                   No reviews found
                 </p>
@@ -300,49 +274,28 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
               <div>
                 <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                    <svg
-                      className="h-6 w-6 text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
+                    <ClipboardList
+                      className="h-5 w-5 text-primary"
+                      aria-hidden="true"
+                    />
                     All Reviews
                   </h3>
-                  <div className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+                  <div className="rounded-lg border border-border bg-muted px-4 py-2 text-sm font-semibold text-foreground">
                     {reviews.length}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {reviews.map((review) => (
                     <div
                       key={review.id}
-                      className="flex flex-col rounded-2xl border border-border bg-background p-5 transition hover:border-primary/40 hover:shadow-sm"
+                      className="flex flex-col rounded-lg border border-border bg-background p-4 shadow-sm transition hover:border-primary/40 hover:bg-accent/20"
                     >
                       <div className="mb-4 flex items-start gap-3 border-b border-border pb-3">
-                        <div className="flex-shrink-0">
-                          <svg
-                            className="h-10 w-10 text-primary"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                            />
-                          </svg>
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                          <BookOpen className="h-5 w-5" aria-hidden="true" />
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="mb-1 truncate text-base font-semibold text-foreground">
                             {review.bookName ?? "Unknown book"}
                           </div>
@@ -350,21 +303,21 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                             <span className="font-medium">
                               {review.username ?? "Anonymous"}
                             </span>
-                            <span>•</span>
+                            <span>/</span>
                             <span>
                               {review.createdAt?.toDate
                                 ? review.createdAt.toDate().toLocaleDateString()
-                                : "—"}
+                                : "-"}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mb-4 flex-1 rounded-xl border border-border bg-card p-4">
+                      <div className="mb-4 flex-1 rounded-lg border border-border bg-card p-4">
                         <ReviewItem review={review} />
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="grid gap-2 sm:grid-cols-2">
                         <button
                           onClick={() =>
                             router.push(
@@ -373,47 +326,17 @@ function AdminReviewList({ userId }: AdminReviewListProps) {
                               )}`,
                             )
                           }
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary px-4 py-2.5 font-semibold text-primary-foreground transition hover:bg-primary/90"
+                          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                         >
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
+                          <Eye className="h-4 w-4" aria-hidden="true" />
                           View Book
                         </button>
                         <button
                           onClick={() => handleDeleteReview(review.id)}
                           disabled={deletingReviewId === review.id}
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-300/80 bg-red-50 px-4 py-2.5 font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-300/80 bg-red-50 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0h8a1 1 0 001-1V5a1 1 0 00-1-1H8a1 1 0 00-1 1v1a1 1 0 001 1z"
-                            />
-                          </svg>
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                           {deletingReviewId === review.id
                             ? "Deleting..."
                             : "Delete"}
