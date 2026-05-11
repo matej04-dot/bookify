@@ -2,9 +2,10 @@
 
 A full-stack book management application for browsing, organizing, and discovering books. Bookify is a modern web application built with Next.js, React, and TypeScript.
 
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Next.js](https://img.shields.io/badge/Next.js-15-black)
-![React](https://img.shields.io/badge/React-19-61DAFB)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.3-black)
+![React](https://img.shields.io/badge/React-19.1.0-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.14-38B2AC)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 | | |
@@ -19,19 +20,21 @@ A full-stack book management application for browsing, organizing, and discoveri
 
 ## 🚀 Highlights
 
-- Modern Next.js 15 frontend with React 19
-- TypeScript for type-safe development
-- Responsive design with Tailwind CSS
+- Modern Next.js 16 frontend with React 19
+- TypeScript 5.7 for type-safe development
+- Responsive design with Tailwind CSS 3.4
+- Firebase integration for authentication and data storage
+- React Query for efficient data fetching
 - Book catalog browsing and search functionality
 - Book details and discovery features
 
 ## 🧩 Problem
 
-Book enthusiasts and collectors struggle to organize and discover books efficiently across various sources. Managing personal collections, finding recommendations, and keeping track of reading progress requires a centralized solution.
+Book enthusiasts and collectors struggle to organize and discover books efficiently across various sources. Managing personal collections, finding recommendations, and keeping track of reading progress can be overwhelming and time-consuming.
 
 ## 💡 Solution
 
-Bookify centralizes book discovery and management into one user-friendly platform. The application provides an intuitive interface for browsing books, organizing personal collections, and discovering new titles based on interests and preferences.
+Bookify centralizes book discovery and management into one user-friendly platform. The application provides an intuitive interface for browsing books, organizing personal collections, and discovering new titles tailored to your interests.
 
 ## ⚙️ Features
 
@@ -40,30 +43,40 @@ Bookify centralizes book discovery and management into one user-friendly platfor
 - Personal book collection management
 - Book discovery and recommendations
 - Responsive UI for desktop and mobile
+- Firebase authentication
+- Rate limiting with Upstash Redis
 
 ## 🏗 Architecture
 
 The system follows a modern full-stack architecture:
 
-- Next.js frontend with React components
+- Next.js 16 frontend with React 19 components
 - TypeScript for type safety across the application
 - Tailwind CSS for responsive styling
+- Firebase for authentication and data storage
+- React Query for state management and data fetching
 - API integration for book data
 
 ```mermaid
 flowchart LR
   A["Next.js Frontend"] --> B["React Components"]
   B --> C["API Layer"]
-  C --> D["Book Data Service"]
+  C --> D["Firebase Backend"]
 ```
 
 ## 🛠 Tech Stack
 
-| Area | Stack |
+| Tool | Version |
 | --- | --- |
-| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS |
-| Styling | Tailwind CSS |
-| Documentation | Markdown |
+| Next.js | 16.2.3 |
+| React | 19.1.0 |
+| TypeScript | 5.7.2 |
+| Tailwind CSS | 3.4.14 |
+| Firebase | 11.9.0 |
+| React Query | 5.59.0 |
+| Radix UI | 2.1.2 |
+| Embla Carousel | 8.3.0 |
+| Node.js | 20+ |
 
 ## 🚀 Getting Started
 
@@ -86,7 +99,7 @@ npm install
 npm run dev
 ```
 
-Open:
+Open your browser and navigate to:
 
 ```text
 http://localhost:3000
@@ -94,34 +107,30 @@ http://localhost:3000
 
 ## 🔐 Environment Variables
 
-Create `.env.local` if you need to configure API endpoints or other settings:
+Create `.env.local` to configure Firebase and API endpoints:
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-api-endpoint.com
+NEXT_PUBLIC_FIREBASE_API_KEY=your_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+UPSTASH_REDIS_URL=your_redis_url
+UPSTASH_REDIS_TOKEN=your_token
 ```
 
 ## ✅ Quality Checks
 
 ```bash
 npm install
-npm run type-check
+npm run lint
 npm run build
 ```
-
-## 🔮 Future Improvements
-
-- Add user authentication and accounts
-- Add book ratings and reviews
-- Add reading progress tracking
-- Add social features for book sharing
-- Add advanced filtering and sorting options
-- Add automated tests
-- Add CI/CD pipeline
 
 ## 👤 Author
 
 - Matej Kraljević
-
 - Repository: [matej04-dot/bookify](https://github.com/matej04-dot/bookify)
 
 ## 📄 License
