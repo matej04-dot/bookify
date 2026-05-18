@@ -8,15 +8,15 @@ A full-stack book management application for browsing, organizing, and discoveri
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.14-38B2AC)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-| | |
-| --- | --- |
-| 🟢 Tech | Next.js • React • TypeScript • Tailwind CSS |
-| 📍 Local App | `http://localhost:3000` |
+|                   |                                                        |
+| ----------------- | ------------------------------------------------------ |
+| 🟢 Tech           | Next.js • React • TypeScript • Tailwind CSS            |
+| 📍 Local App      | `http://localhost:3000`                                |
 | 🔐 Current Status | Core book browsing and discovery features implemented. |
 
 ## 📸 Preview
 
-> A modern, intuitive interface for book discovery and management.
+![Bookify home screen](./picture/preview.png)
 
 ## 🚀 Highlights
 
@@ -66,17 +66,17 @@ flowchart LR
 
 ## 🛠 Tech Stack
 
-| Tool | Version |
-| --- | --- |
-| Next.js | 16.2.3 |
-| React | 19.1.0 |
-| TypeScript | 5.7.2 |
-| Tailwind CSS | 3.4.14 |
-| Firebase | 11.9.0 |
-| React Query | 5.59.0 |
-| Radix UI | 2.1.2 |
-| Embla Carousel | 8.3.0 |
-| Node.js | 20+ |
+| Tool           | Version |
+| -------------- | ------- |
+| Next.js        | 16.2.3  |
+| React          | 19.1.0  |
+| TypeScript     | 5.7.2   |
+| Tailwind CSS   | 3.4.14  |
+| Firebase       | 11.9.0  |
+| React Query    | 5.59.0  |
+| Radix UI       | 2.1.2   |
+| Embla Carousel | 8.3.0   |
+| Node.js        | 20+     |
 
 ## 🚀 Getting Started
 
